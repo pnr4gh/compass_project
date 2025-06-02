@@ -1,0 +1,158 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %} 
+{% block profile %} 
+active
+{% endblock %}
+
+{% block tool %}
+    <a class="btn btn-primary" href="{% url 'change_password' %}">Change Password</a>
+{% endblock %}
+
+{% block breadcrumb %}
+	<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+		<li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+		<li class="breadcrumb-item text-sm text-dark active" aria-current="page">profile</li>
+  	</ol>
+  	<h6 class="font-weight-bolder mb-0">{{user.username}}</h6>
+{% endblock %}
+
+{% block content %}
+<div class="row bg-white">
+
+	<div class="col-md-12">
+        
+        <form method="POST" action="{% url 'user_profile' %}">
+            {% csrf_token %}
+            
+            {{ user_form|crispy }}
+           
+            {{ profile_form|crispy}}
+            <button type="submit" class="btn btn-primary float-end">Save Changes</button>
+        </form>
+
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-md-12">
+        <button class="btn btn-success float-end" data-bs-toggle="modal" data-bs-target="#addHandleModal">Add User Handle</button>
+    </div>
+</div>
+    
+<div class="row">
+    <div class="col-md-12">
+        <h5>User Handles</h5>
+        
+        <div class="table-responsive p-0">
+            <table class="table align-items-center mb-0 text-sm bg-white">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">#</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Platform</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">User Handle</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Last Updated</th>
+                        <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for handle in user_handles %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ handle.platform.name }}</td>
+                        <td>{{ handle.user_handle }}</td>
+                        <td>{{ handle.last_update }}</td>
+                        <td><a class="btn btn-primary removeHandleForm m-0" platform={{handle.platform.id}}>Remove</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No user handles found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+      
+
+       
+       
+  
+
+    <!-- Add User Handle Modal -->
+    <div class="modal fade" id="addHandleModal" tabindex="-1" aria-labelledby="addHandleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addHandleModalLabel">Add User Handle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addHandleForm">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="platform" class="form-label">Platform</label>
+                            <select class="form-select" name="platform" id="platform">
+                                {% for platform in platforms %}
+                                <option value="{{ platform.id }}">{{ platform.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user_handle" class="form-label">User Handle</label>
+                            <input type="text" class="form-control" name="user_handle" id="user_handle" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Handle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Add User Handle AJAX
+        $('#addHandleForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '{% url "add_user_handle" %}',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    alert(response.message);
+                    location.reload(); // Reload to update user handles table
+                },
+                error: function(response) {
+                    alert('Error adding user handle.');
+                }
+            });
+        });
+
+        $('.removeHandleForm').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to remove user handle? Caution: All records related to this platform will be deleted')) {
+            var platform = $(this).attr('platform');
+            $.ajax({
+                url:  "/remove_user_handle/",
+                type: 'GET',
+                data: {
+                    platform:platform
+                },
+                success: function(response) {
+                    alert(response.message);
+                    location.reload(); // Reload to update user handles table
+                },
+                error: function(response) {
+                    alert('Error removing user handle.');
+                }
+            });
+        }
+        });
+    </script>
+{% endblock %}

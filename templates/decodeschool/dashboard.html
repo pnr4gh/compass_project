@@ -1,0 +1,429 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %}
+{% block home %}
+active
+{% endblock %}
+
+{% block breadcrumb %}
+	<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+		<li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+		<li class="breadcrumb-item text-sm text-dark active" aria-current="page">Dashboard</li>
+  	</ol>
+  	<h6 class="font-weight-bolder mb-0">Dashboard</h6>
+{% endblock %}
+
+{% block content %}
+
+<div class="row p-1">
+	<h6 class="text-primary">Hi  {{user.username}}</h6>
+</div>
+ 
+		
+<div class="row">
+
+	<div class="col-md-8">
+		<div class="card shadow h-100">
+			<div class="card-header pb-0 p-3">
+				<h6 class="mb-0">Portal Handles</h6>
+				</div>
+				<div class="card-body pb-0 p-3">
+				<div class="table-responsive p-0">
+				<table class="table align-items-center mb-0">
+					<thead>
+						<tr>
+							<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Platform</th>
+							<th class="text-uppercase text-xxs font-weight-bolder opacity-7">User Name</th>
+							<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Updated on</th>
+							<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for handle in user_handles %}
+							<tr>
+								<td>{{handle.platform.name}}</td>
+								<td>{{handle.user_handle}}</td>
+								<td>{{handle.last_update}}</td>
+								{% if handle.user_handle != "" %}
+									<td><a class="update_profile btn btn-primary m-0" href="#" platform= "{{handle.platform.name}}" url="{{handle.user_handle}}">Update</a></td>
+								{% endif %}
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				</div>
+					
+				
+			</div>
+				
+		</div>
+	</div>
+		
+	
+	<div class="col-md-4">
+		<div class="card shadow h-100">
+			<div class="card-header pb-0 p-3">
+				<h6 class="mb-0">Rankings</h6>
+				</div>
+				<div class="card-body pb-0 p-3">
+
+				</div>
+			</div>
+		</div>
+	</div>			
+</div>
+
+<div class="row">
+	<div class="col-12">
+	  <div class="card m-4">
+		<div class="card-header pb-0">
+		  <h6>Solved Problem Statistics</h6>
+		</div>
+		<div class="card-body px-0 pt-0 pb-2">
+		  <div class="table-responsive p-0">
+			<table class="table align-items-center mb-0">
+			  	<thead>
+					<tr>
+					 	<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Platform</th>
+						<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Username</th>
+						<th class="text-uppercase text-xxs font-weight-bolder opacity-7">solved</th>
+						<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Easy</th>
+						<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Medium</th>
+						<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Hard</th>
+						<th class="text-uppercase text-xxs font-weight-bolder opacity-7">Last Update</th>
+					</tr>
+			  	</thead>
+			  	<tbody>
+			   		<tr>
+						<td>Leet Code</td>
+						<td><a href="" target="_blank">{{profile.get_leetcode_username}}</a></td>
+						<td>{{profile.get_lc_count}}</td>
+						<td>{{profile.get_lc_easy_count}}</td>
+						<td>{{profile.get_lc_medium_count}}</td>
+						<td>{{profile.get_lc_hard_count}}</td>
+						<td>{{profile.get_leetcode_last_update}}</td>
+					</tr>
+
+					<tr>
+						<td>Geeks for Geeks</td>
+						<td><a href="" target="_blank">{{profile.get_g4g_username}}</a></td>
+						<td>{{profile.get_g4g_count}}</td>
+						<td>{{profile.get_g4g_easy_count}}</td>
+						<td>{{profile.get_g4g_medium_count}}</td>
+						<td>{{profile.get_g4g_hard_count}}</td>
+						<td>{{profile.get_g4g_last_update}}</td>
+					</tr>
+
+
+					<tr>
+						<td>Code Forces</td>
+						<td><a href="" target="_blank">{{profile.get_code_forces_username}}</a></td>
+						<td>{{profile.get_cf_count}}</td>
+						<td>{{profile.get_cf_easy_count}}</td>
+						<td>{{profile.get_cf_medium_count}}</td>
+						<td>{{profile.get_cf_hard_count}}</td>
+						<td>{{profile.get_code_forces_last_update}}</td>
+					</tr>
+			  	</tbody>
+			</table>
+		  </div>
+		</div>
+	  </div>
+	</div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="card m-4">
+            <div class="card-header pb-0">
+                <h6>Contests</h6>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center text-center table-bordered">
+                        <thead>
+                            <tr>
+                                <th colspan="3" class="text-uppercase text-xs font-weight-bold opacity-7">Upcoming Contests</th>
+                                <th colspan="3" class="text-uppercase text-xs font-weight-bold opacity-7">Live Contests</th>
+                            </tr>
+                            <tr>
+                                <th class="text-nowrap">Name</th>
+                                <th class="text-nowrap">Start Time</th>
+                                <th class="text-nowrap">Countdown</th>
+                                <th class="text-nowrap">Name</th>
+                                <th class="text-nowrap">End Time</th>
+                                <th class="text-nowrap">Time Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+							{% for upcoming, live in contests_zipped %}
+							<tr>
+								<!-- Upcoming Contests -->
+								{% if upcoming %}
+								<td><a href="{% url 'contest_redirect' upcoming.dmoj_key %}" target="_blank">{{ upcoming.name }}</a></td>
+								<td>{{ upcoming.start_time }}</td>
+								<td id="countdown-upcoming-{{ upcoming.id }}" data-endtime="{{ upcoming.start_time|date:'c' }}"></td>
+								{% else %}
+								<td colspan="3" class="text-muted py-3">-</td>
+								{% endif %}
+						
+								<!-- Live Contests -->
+								{% if live %}
+								<td><a href="{% url 'contest_redirect' live.dmoj_key %}" target="_blank">{{ live.name }}</a></td>
+								<td>{{ live.end_time }}</td>
+								<td id="countdown-live-{{ live.id }}" data-endtime="{{ live.end_time|date:'c' }}"></td>
+								{% else %}
+								<td colspan="3" class="text-muted py-3">-</td>
+								{% endif %}
+							</tr>
+							{% empty %}
+							<tr>
+								<td colspan="3" class="text-muted py-3">No upcoming contests</td>
+								<td colspan="3" class="text-muted py-3">No live contests</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row bg-white mx-4 p-2 rounded-3">
+	<div class="col-12">
+		<h6>Assignments to Solve</h6>
+		<div class="accordion" id="accordionExample">
+			{% for assignment in assignments %}
+				{% if user|no_of_problems:assignment.id != assignment.problem_stats.0 %}
+				<div class="accordion-item">
+					<div class="accordion-item bg-white">
+						<h2 class="accordion-header border-bottom" id="heading{{ assignment.id }}">
+						  	<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ assignment.id }}" aria-expanded="false" aria-controls="collapse{{ assignment.id }}">
+								<div class="col-md-4">
+									<span class="bg-primary rounded-1 m-1 p-1 text-white text-sm">{{ assignment.name }}</span>
+									<span class="bg-primary rounded-1 m-1 p-1 text-white text-sm">{{ assignment.course.course_title }}</span> 
+								</div>
+								<div class="col-md-4">
+									<span class="bg-gradient-success rounded-1 m-1 p-1 text-white text-sm">
+										{{ assignment.problem_stats.0 }} Problems 
+									</span>
+								
+									
+									<span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+										{{ assignment.problem_stats.1 }} E
+									</span>
+									<span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+										{{ assignment.problem_stats.2 }} M
+									</span>
+									<span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+										{{ assignment.problem_stats.3 }} H
+									</span>
+								</div>
+								<div class="col-md-4">
+									<span class="bg-gradient-success rounded-1 m-1 p-1 text-white text-sm">
+										{{user|no_of_problems:assignment.id}} solved out of {{assignment.problem_stats.0}}
+									</span>
+								   
+									
+								</div>   
+								
+										  
+						  	</button>
+						</h2> 
+					
+					<div id="collapse{{assignment.id}}" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+						<div class="accordion-body">
+												
+							<div class="table-responsive p-0">
+								<table class="table align-items-center mb-0">
+							  	<thead>
+									<tr>
+										<th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7">Status</th>
+										<th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7">Problem Name</th>
+										<th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7">Difficulty</th>
+										<th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7">Platform</th>
+										<th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7">Tags</th>
+										
+									</tr>
+								</thead>
+								<tbody>
+								{% for problem in assignment.all_problems %}
+									<tr>
+										<td class="text-center text-sm">
+											{% if user|is_solved:problem.problem.id %}
+												<span class="text-primary text-sm">Solved</span>
+											{% else %}
+												{% if problem.problem.platform.name == "Leet Code" %}
+													<a target="_blank" href="{{problem.problem.platform.url}}{{problem.problem.problem_slug}}" class="btn btn-primary">Solve</a>
+												{% else %}
+													<a target="_blank" href="{{problem.problem.problem_slug}}" class="btn btn-primary">Solve</a>
+												{% endif %}
+											{% endif %}
+										</td>
+										<td class="text-center text-sm">{{ problem.problem.problem_title }}</td>
+										<td class="text-center text-sm">{{ problem.problem.complexity.level }}</td>
+										<td class="text-center text-sm">{{ problem.problem.platform.name }}</td>
+										<td class="text-center text-sm">
+											{% for tags in problem.problem.problemtags_set.all %}
+												{{tags.topictags.tag}},
+											{% endfor %}
+										</td>
+									
+									</tr>
+									{% endfor %}
+								</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				{% endif %}
+			{% endfor %}
+		</div>
+	</div>
+</div>
+
+<!-- Bootstrap JS and Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+	$(document).ready(function(){
+		var url;
+		$(".update_profile").click(function(e){
+		e.preventDefault();
+			 
+		url = "update_solved/" + $(this).attr('url') + "/" + $(this).attr('platform'); 
+		if($(this).attr('platform') != "Leet Code")
+		{
+			$.ajax(
+			{
+				type:"POST",
+				url:url,
+				
+				success: function( data ) 
+				{
+					alert(data.message)
+					if(data.status=="ok")
+					{
+						location.reload(true);
+					}
+				}
+			})
+
+		}
+		else
+		{
+			$("#myModal").modal("show");
+		}
+	});
+	
+		
+	
+		
+		  
+		$("#btn-update").click(function(e){
+			e.preventDefault();
+			
+			var lc_csrf = $("#lc_csrf").val();
+			var lc_session =  $("#lc_session").val();
+		   
+			$.ajax(
+			{
+				type:"POST",
+				url:url,
+				data:{
+					 lc_csrf: lc_csrf,
+					 lc_session:lc_session
+				},
+				success: function( data ) 
+				{
+					alert(data.message)
+					if(data.status=="ok")
+					{
+						$("#myModal").modal("hide");
+						location.reload(true);
+					}
+				}
+			})
+			  
+			
+	
+		   
+		  });
+		
+	});
+	document.addEventListener("DOMContentLoaded", function () {
+		function startCountdown(elementId, endTime) {
+			const element = document.getElementById(elementId);
+			if (!element) return;
+
+			function updateTimer() {
+				const now = new Date().getTime();
+				const targetTime = new Date(endTime).getTime();
+				const timeLeft = targetTime - now;
+
+				if (isNaN(targetTime)) {
+					element.innerText = "Invalid Time";
+					clearInterval(interval);
+					return;
+				}
+
+				if (timeLeft <= 0) {
+					element.innerText = "Started";
+					clearInterval(interval);
+					return;
+				}
+
+				const totalHours = Math.floor(timeLeft / (1000 * 60 * 60)); // Fix: Get total remaining hours
+				const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+				const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+				element.innerText = `${totalHours}h ${minutes}m ${seconds}s`;
+			}
+
+			const interval = setInterval(updateTimer, 1000);
+			updateTimer(); // Call immediately to update UI instantly
+		}
+
+		document.querySelectorAll("[id^='countdown-']").forEach(el => {
+			const endTime = el.getAttribute("data-endtime");
+			if (endTime) {
+				startCountdown(el.id, endTime);
+			}
+		});
+	});
+	</script>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+	  <div class="modal-content">
+		<div class="modal-header">
+		  <h5 class="modal-title" id="myModalLabel">Session Detail</h5>
+		  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		</div>
+		<div class="modal-body">
+		  <table class="table">
+			<tr>
+			  <td>Cookie CSRF:</td>
+			  <td>
+				<input type="text" id="lc_csrf" class="form-control">
+			  </td>
+			</tr>
+			<tr>
+			  <td>Cookie Leetcode Session:</td>
+			  <td>
+				<input type="text" id="lc_session" class="form-control">
+			  </td>
+			</tr>
+		  </table>
+		  <button id="btn-update" type="button" class="btn btn-primary">Update</button>
+		</div>
+	  </div>
+	</div>
+  </div>
+  
+
+{% endblock %}

@@ -1,0 +1,542 @@
+{% extends "decodeschool/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% load custom_tags %}
+
+{% block breadcrumb %}
+{% block Accolades %}
+active
+{% endblock %}
+<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Accolade</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Post</li>
+</ol>
+<h6 class="font-weight-bolder mb-0">Accolades Post</h6>
+{% endblock %}
+
+{% block tool %}
+<a href="{% url 'accolade_list' %}" class="btn btn-secondary"> Back to Accolade</a>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="d-flex align-items-center">
+            <img src="{% static 'media/user_profile.jpeg' %}" alt="Default Profile Picture" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #ddd;">
+            <strong style="font-size: 1rem; color: darkorange;">{{ username }}</strong>
+        </div>
+        <div class="card-body d-flex align-items-start">
+            <div class="w-100">
+                <form method="POST" id="accoladeForm">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <textarea name="content" class="form-control" placeholder="What do you want to talk about?" rows="10"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="dropdown me-1">
+                                
+                                <ul class="dropdown-menu p-3 shadow-lg" aria-labelledby="organizationDropdown" style="min-width: 350px; max-height: 300px; overflow-y: auto;">
+                                    <li>
+                                        <a class="dropdown-item text-primary fw-bold" href="#" id="addNewOrganization">+ Add New Organization</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <div class="mb-2">
+                                        <input type="text" class="form-control form-control-sm" id="searchOrganization" placeholder="Search organization...">
+                                    </div>
+                                    <div id="organizationList">
+                                        {% for org in organizations %}
+                                        <li>
+                                            <a class="dropdown-item organization-item" href="#" data-org-name="{{ org.name }}">{{ org.name }}</a>
+                                        </li>
+                                        {% endfor %}
+                                    </div>
+                                </ul>
+                            </div>
+
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const addNewOrganization = document.getElementById('addNewOrganization');
+                                    const organizationList = document.getElementById('organizationList');
+                                    const contentTextarea = document.querySelector('textarea[name="content"]');
+                                    const searchInput = document.getElementById('searchOrganization');
+
+                                    // Add new organization
+                                    addNewOrganization.addEventListener('click', async function (e) {
+                                        e.preventDefault();
+                                        const newOrgName = prompt('Enter the name of the new organization:');
+                                        if (newOrgName) {
+                                            try {
+                                                const response = await fetch("{% url 'add_organization' %}", {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'X-CSRFToken': '{{ csrf_token }}'
+                                                    },
+                                                    body: JSON.stringify({ name: newOrgName })
+                                                });
+
+                                                if (response.ok) {
+                                                    const newOrg = await response.json();
+                                                    const newOrgItem = document.createElement('li');
+                                                    newOrgItem.innerHTML = `<a class="dropdown-item organization-item" href="#" data-org-name="${newOrg.name}">${newOrg.name}</a>`;
+                                                    organizationList.appendChild(newOrgItem);
+
+                                                    // Add click event to the new organization item
+                                                    newOrgItem.querySelector('.organization-item').addEventListener('click', function (e) {
+                                                        e.preventDefault();
+                                                        contentTextarea.value += `Organization: ${newOrg.name}\n`;
+                                                    });
+                                                } else {
+                                                    alert('Failed to add organization. Please try again.');
+                                                }
+                                            } catch (error) {
+                                                console.error('Error:', error);
+                                                alert('An error occurred. Please try again.');
+                                            }
+                                        }
+                                    });
+
+                                    // Add organization name to content
+                                    organizationList.addEventListener('click', function (e) {
+                                        if (e.target.classList.contains('organization-item')) {
+                                            e.preventDefault();
+                                            const orgName = e.target.getAttribute('data-org-name');
+                                            contentTextarea.value += `Organization: ${orgName}\n`;
+                                        }
+                                    });
+
+                                    // Filter organizations based on search input
+                                    searchInput.addEventListener('input', function () {
+                                        const filter = this.value.toLowerCase();
+                                        const items = organizationList.querySelectorAll('.organization-item');
+                                        items.forEach(item => {
+                                            const text = item.textContent.toLowerCase();
+                                            item.parentElement.style.display = text.includes(filter) ? '' : 'none';
+                                        });
+                                    });
+                                });
+                            </script>
+                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="organizationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Select Organization
+                            </button>
+                            <button type="button" class="btn btn-light btn-sm me-1" id="addOutcomeButton">🖼️ Add Outcome</button>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const addOutcomeButton = document.getElementById('addOutcomeButton');
+                                    const contentTextarea = document.querySelector('textarea[name="content"]');
+
+                                    addOutcomeButton.addEventListener('click', function (e) {
+                                        e.preventDefault();
+
+                                        const modalHtml = `
+                                            <div id="outcomeModal" class="modal fade" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Add Outcome</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label for="outcomeTitle" class="form-label">Title</label>
+                                                                <input type="text" id="outcomeTitle" class="form-control" placeholder="Enter outcome title">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="outcomeScore" class="form-label">Score</label>
+                                                                <input type="text" id="outcomeScore" class="form-control" placeholder="eg:Winner,2nd place,3rd place,Participated,Special Award,etc.">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="saveOutcome" class="btn btn-primary">Save</button>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                                        const outcomeModal = new bootstrap.Modal(document.getElementById('outcomeModal'));
+                                        outcomeModal.show();
+
+                                        const saveOutcomeButton = document.getElementById('saveOutcome');
+
+                                        saveOutcomeButton.addEventListener('click', async function () {
+                                            const title = document.getElementById('outcomeTitle').value.trim();
+                                            const score = document.getElementById('outcomeScore').value.trim();
+
+                                            if (title && score) {
+                                                try {
+                                                    const response = await fetch("{% url 'add_outcome' %}", {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json',
+                                                            'X-CSRFToken': '{{ csrf_token }}'
+                                                        },
+                                                        body: JSON.stringify({ title, score })
+                                                    });
+
+                                                    if (response.ok) {
+                                                        const savedOutcome = await response.json();
+                                                        contentTextarea.value += `Outcome Title: ${savedOutcome.title}\nOutcome Score: ${savedOutcome.score}\n`;
+                                                        outcomeModal.hide();
+                                                        document.getElementById('outcomeModal').remove();
+                                                    } else {
+                                                        alert('Failed to add outcome. Please try again.');
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error:', error);
+                                                    alert('An error occurred. Please try again.');
+                                                }
+                                            } else {
+                                                alert('Both title and score are required.');
+                                            }
+                                        });
+
+                                        document.getElementById('outcomeModal').addEventListener('hidden.bs.modal', function () {
+                                            document.getElementById('outcomeModal').remove();
+                                        });
+                                    });
+                                });
+                            </script>
+
+                            <button type="button" class="btn btn-light btn-sm me-1" id="addScopeButton">📅Scope</button>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const addScopeButton = document.getElementById('addScopeButton');
+                                    const contentTextarea = document.querySelector('textarea[name="content"]');
+
+                                    addScopeButton.addEventListener('click', function (e) {
+                                        e.preventDefault();
+
+                                        const modalHtml = `
+                                            <div id="scopeModal" class="modal fade" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Add Scope</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label for="scopeTitle" class="form-label">Scope Title</label>
+                                                                <input type="text" id="scopeTitle" class="form-control" placeholder="Enter scope title">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="scopeDetails" class="form-label">Details</label>
+                                                                <textarea id="scopeDetails" class="form-control" placeholder="Eg:national level, inter college, intra college,state level, global certification, Mooc Course, Mooc+Procted Assessment, Training Program, Internship,Industry Training Program"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="saveScope" class="btn btn-primary">Save</button>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                                        const scopeModal = new bootstrap.Modal(document.getElementById('scopeModal'));
+                                        scopeModal.show();
+
+                                        const saveScopeButton = document.getElementById('saveScope');
+
+                                        saveScopeButton.addEventListener('click', async function () {
+                                            const title = document.getElementById('scopeTitle').value.trim();
+                                            const details = document.getElementById('scopeDetails').value.trim();
+
+                                            if (title && details) {
+                                                try {
+                                                    const response = await fetch("{% url 'add_scope' %}", {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json',
+                                                            'X-CSRFToken': '{{ csrf_token }}'
+                                                        },
+                                                        body: JSON.stringify({ title, details })
+                                                    });
+
+                                                    if (response.ok) {
+                                                        const savedScope = await response.json();
+                                                        contentTextarea.value += `Scope: ${savedScope.scope}\nScope Score: ${savedScope.score}\n`;
+                                                        scopeModal.hide();
+                                                        document.getElementById('scopeModal').remove();
+                                                    } else {
+                                                        alert('Failed to add scope. Please try again.');
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error:', error);
+                                                    alert('An error occurred. Please try again.');
+                                                }
+                                            } else {
+                                                alert('Both title and details are required.');
+                                            }
+                                        });
+
+                                        document.getElementById('scopeModal').addEventListener('hidden.bs.modal', function () {
+                                            document.getElementById('scopeModal').remove();
+                                        });
+                                    });
+                                });
+                            </script>
+
+                           
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const uploadImageButton = document.getElementById('uploadImageButton');
+                                    const contentTextarea = document.querySelector('textarea[name="content"]');
+                                    const contentPreview = document.createElement('div');
+                                    contentPreview.id = 'contentPreview';
+                                    contentTextarea.parentNode.insertBefore(contentPreview, contentTextarea.nextSibling);
+
+                                    uploadImageButton.addEventListener('click', function (e) {
+                                        e.preventDefault();
+
+                                        const modalHtml = `
+                                            <div id="uploadImageModal" class="modal fade" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Upload Image</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <form id="imageUploadForm">
+                                                                <div class="mb-3">
+                                                                    <label for="imageFile" class="form-label">Select Image</label>
+                                                                    <input type="file" id="imageFile" class="form-control" accept="image/*">
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="uploadImage" class="btn btn-primary">Upload</button>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                                        const uploadImageModal = new bootstrap.Modal(document.getElementById('uploadImageModal'));
+                                        uploadImageModal.show();
+
+                                        const uploadImageButton = document.getElementById('uploadImage');
+
+                                        uploadImageButton.addEventListener('click', async function () {
+                                            const imageFileInput = document.getElementById('imageFile');
+                                            const imageFile = imageFileInput.files[0];
+
+                                            if (imageFile) {
+                                                const formData = new FormData();
+                                                formData.append('image', imageFile);
+
+                                                try {
+                                                    const response = await fetch("{% url 'upload_image' %}", {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'X-CSRFToken': '{{ csrf_token }}'
+                                                        },
+                                                        body: formData
+                                                    });
+
+                                                    if (response.ok) {
+                                                        const uploadedImage = await response.json();
+                                                        const imgElement = document.createElement('img');
+                                                        imgElement.src = uploadedImage.url;
+                                                        imgElement.alt = 'Uploaded Image';
+                                                        imgElement.style.maxWidth = '100%';
+                                                        imgElement.style.marginTop = '10px';
+                                                        contentPreview.appendChild(imgElement);
+
+                                                        const imgTag = `<img src="${uploadedImage.url}" alt="Uploaded Image" style="max-width: 100%;">`;
+                                                        contentTextarea.value += `\n${imgTag}`;
+                                                        uploadImageModal.hide();
+                                                        document.getElementById('uploadImageModal').remove();
+                                                    } else {
+                                                        alert('Failed to upload image. Please try again.');
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error:', error);
+                                                    alert('An error occurred. Please try again.');
+                                                }
+                                            } else {
+                                                alert('Please select an image to upload.');
+                                            }
+                                        });
+
+                                        document.getElementById('uploadImageModal').addEventListener('hidden.bs.modal', function () {
+                                            document.getElementById('uploadImageModal').remove();
+                                        });
+                                    });
+                                });
+                            </script>
+
+                            <button type="button" class="btn btn-light btn-sm me-1" id="addSkillButton">⭐Skill</button>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const addSkillButton = document.getElementById('addSkillButton');
+                                    const contentTextarea = document.querySelector('textarea[name="content"]');
+                                    let skills = [];
+
+                                    addSkillButton.addEventListener('click', function (e) {
+                                        e.preventDefault();
+
+                                        const modalHtml = `
+                                            <div id="skillModal" class="modal fade" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Add Skill</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label for="skillName" class="form-label">Skill Name</label>
+                                                                <input type="text" id="skillName" class="form-control" placeholder="Enter skill name">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="saveSkill" class="btn btn-primary">Save</button>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                                        const skillModal = new bootstrap.Modal(document.getElementById('skillModal'));
+                                        skillModal.show();
+
+                                        const saveSkillButton = document.getElementById('saveSkill');
+
+                                        saveSkillButton.addEventListener('click', function () {
+                                            const skillName = document.getElementById('skillName').value.trim();
+
+                                            if (skillName) {
+                                                skills.push(skillName);
+                                                const skillsText = skills.length > 0 ? `Skills: ${skills.join(', ')}\n` : '';
+                                                const currentContent = contentTextarea.value;
+                                                const updatedContent = currentContent.replace(/Skills: .*\n?/, '') + skillsText;
+                                                contentTextarea.value = updatedContent.trim() + '\n';
+                                                skillModal.hide();
+                                                document.getElementById('skillModal').remove();
+                                            } else {
+                                                alert('Skill name is required.');
+                                            }
+                                        });
+
+                                        document.getElementById('skillModal').addEventListener('hidden.bs.modal', function () {
+                                            document.getElementById('skillModal').remove();
+                                        });
+                                    });
+                                });
+                            </script>
+
+                            <button type="button" class="btn btn-light btn-sm me-1" id="addDateButton">Date</button>
+                            <button type="button" class="btn btn-light btn-sm" id="uploadImageButton">➕image</button>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const addDateButton = document.getElementById('addDateButton');
+                                    const contentTextarea = document.querySelector('textarea[name="content"]');
+
+                                    addDateButton.addEventListener('click', function (e) {
+                                        e.preventDefault();
+
+                                        const modalHtml = `
+                                            <div id="dateModal" class="modal fade" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Add Date</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label for="selectedDate" class="form-label">Select Date</label>
+                                                                <input type="date" id="selectedDate" class="form-control">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" id="saveDate" class="btn btn-primary">Save</button>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                                        const dateModal = new bootstrap.Modal(document.getElementById('dateModal'));
+                                        dateModal.show();
+
+                                        const saveDateButton = document.getElementById('saveDate');
+
+                                        saveDateButton.addEventListener('click', function () {
+                                            const selectedDate = document.getElementById('selectedDate').value;
+
+                                            if (selectedDate) {
+                                                contentTextarea.value += `Date: ${selectedDate}\n`;
+                                                dateModal.hide();
+                                                document.getElementById('dateModal').remove();
+                                            } else {
+                                                alert('Please select a date.');
+                                            }
+                                        });
+
+                                        document.getElementById('dateModal').addEventListener('hidden.bs.modal', function () {
+                                            document.getElementById('dateModal').remove();
+                                        });
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                    </div>
+
+                    <!-- Form validation script -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const form = document.getElementById('accoladeForm');
+                            const contentTextarea = form.querySelector('textarea[name="content"]');
+
+                            form.addEventListener('submit', function (e) {
+                                const content = contentTextarea.value;
+
+                                // Define required fields and their expected patterns
+                                const requiredFields = [
+                                    { name: 'Organization Name', pattern: /Organization: .+/ },
+                                    { name: 'Outcome Title', pattern: /Outcome Title: .+/ },
+                                    { name: 'Outcome Score', pattern: /Outcome Score: .+/ },
+                                    { name: 'Scope', pattern: /Scope: .+/ },
+                                    { name: 'Scope Score', pattern: /Scope Score: .+/ },
+                                    { name: 'Skills', pattern: /Skills: .+/ }
+                                ];
+
+                                // Check for missing fields
+                                const missingFields = requiredFields
+                                    .filter(field => !field.pattern.test(content))
+                                    .map(field => field.name);
+
+                                if (missingFields.length > 0) {
+                                    e.preventDefault(); // Prevent form submission
+                                    alert(`Please fill in the following required fields:\n- ${missingFields.join('\n- ')}`);
+                                }
+                            });
+                        });
+                    </script>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

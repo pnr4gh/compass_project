@@ -1,0 +1,165 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %} 
+{% block tool %}
+    <a class="btn btn-secondary" href="{% url 'course_detail' assignment.course.id %}">Back to Course</a>
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        
+        <h5>Problems for Assignment: {{ assignment.assignment_name }}</h5>
+
+        <!-- Filters Section -->
+        <div class="mt-3">
+            <h5>Filters:</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <select id="filter-tags" class="form-select">
+                        <option value="">Select Tag</option>
+                        {% for tag in tags %}
+                            <option value="{{ tag.id }}">{{ tag.tag }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="filter-complexity" class="form-select">
+                        <option value="">Select Complexity</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="filter-platform" class="form-select">
+                        <option value="">Select Platform</option>
+                        {% for platform in platforms %}
+                            <option value="{{ platform.id }}">{{ platform.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <input type="text" class="form-control" id="search-input" placeholder="Search programs by title...">
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Problem List -->
+        <div class="mt-4" id="problem-list">
+            {% include 'decodeschool/partial_problem_list.html' %}
+        </div>
+
+        <!-- Load More Button -->
+        <button id="load-more-btn" class="btn btn-primary mt-3" data-assignment-id="{{ assignment.id }}">Load More Problems</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let offset = 20;
+
+            // Load more problems with AJAX
+            $('#load-more-btn').on('click', function() {
+                let assignmentId = $(this).data('assignment-id');
+                let tags = $('#filter-tags').val();
+                let complexity = $('#filter-complexity').val();
+                let platform = $('#filter-platform').val();
+                var query = $('#search-input').val();
+                loadProblems(assignmentId, offset, tags, complexity, platform,query);
+                offset += 20;
+            });
+
+            // Apply filters and reload problems
+            $('#filter-tags, #filter-complexity, #filter-platform').on('change', function() {
+                var query = $('#search-input').val();
+                let assignmentId = {{ assignment.id }};
+                let tags = $('#filter-tags').val();
+                let complexity = $('#filter-complexity').val();
+                let platform = $('#filter-platform').val();
+                offset = 0;
+                loadProblems(assignmentId, offset, tags, complexity, platform,query);
+                offset += 20;
+            });
+
+            $('#search-input').on('keyup', function() {
+                var query = $(this).val();
+                let assignmentId = {{ assignment.id }};
+                let tags = $('#filter-tags').val();
+                let complexity = $('#filter-complexity').val();
+                let platform = $('#filter-platform').val();
+                offset = 0;
+                loadProblems(assignmentId, offset, tags, complexity, platform, query);
+                offset += 20;
+        
+            });
+
+            function loadProblems(assignmentId, offset, tags = '', complexity = '', platform = '', query = '') {
+               
+                $.ajax({
+                    url: `/assignment/${assignmentId}/problems/`,
+                    method: 'GET',
+                    data: {
+                        offset: offset,
+                        tags: tags,
+                        complexity: complexity,
+                        platform: platform,
+                        query:query
+                    },
+                    success: function(response) {
+                        
+                        if (offset === 0) {
+                            $('#problem-list').html(response);
+                        } else {
+                            $('#problem-list').append(response);
+                        }
+                    },
+                    error: function(error) {
+                        console.log('Error loading problems: ', error);
+                    }
+                });
+            }
+
+            // Add or Remove Problem from Assignment
+            $(document).on('click', '.add-to-assignment-btn, .remove-from-assignment-btn', function() {
+                let button = $(this);
+                let problemId = button.data('problem-id');
+                let assignmentId = button.data('assignment-id');
+                let action = button.hasClass('add-to-assignment-btn') ? 'add' : 'remove';
+                let path="";
+                if($(this).hasClass("add-to-assignment-btn"))
+                    {
+                    path= "/add_to_assignment/";
+                    }
+                    else
+                    {
+                       path= "/remove_from_assignment/";
+                    }
+
+                $.ajax({
+                    
+                    url : path,
+                    method: 'POST',
+                    data: {
+                        assignmentId: assignmentId,
+                        problemId: problemId,
+                        
+                    },
+                    success: function(response) {
+                        if (action === 'add') {
+                            button.text('Remove from Assignment').removeClass('add-to-assignment-btn').addClass('remove-from-assignment-btn');
+                        } else {
+                            button.text('Add to Assignment').removeClass('remove-from-assignment-btn').addClass('add-to-assignment-btn');
+                        }
+                    },
+                    error: function(error) {
+                        alert('Failed to update assignment');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

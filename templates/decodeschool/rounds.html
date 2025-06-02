@@ -1,0 +1,709 @@
+{% extends "decodeschool/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="width: 75vw; max-width: 1400px; margin: 0 auto; margin-top: 2rem;">
+  <div class="col-12">
+
+        <div class="row">
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Interview Rounds - {{ job_role.title }}</h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoundModal">
+                  <i class="fas fa-plus"></i> Add Round
+                </button>
+              </div>
+              <div class="card-body">
+                {% for round in interview_process %}
+<div class="round-container mb-4">
+  <div class="card">
+    <div class="card-header bg-primary">
+      <h6 class="mb-0 text-white">Round {{ round.round_number }}: {{ round.round_name }} | {{ round.get_round_type_display }}</h6>
+    </div>
+    <div class="card-body">
+      <div class="skills-container" data-round-id="{{ round.id }}">
+        {% for round_skill in round.required_skills.all %}
+          <div class="skill-button-container d-inline-block me-2 mb-2">
+            <div class="btn-group">
+              <button type="button" class="btn btn-sm btn-outline-primary skill-details-btn" data-round-skill-id="{{ round_skill.id }}" data-skill-name="{{ round_skill.skill_name.skill }}">
+                {{ round_skill.skill_name.skill }}
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger remove-skill" data-round-skill-id="{{ round_skill.id }}">
+                <i class="fas fa-minus"></i>
+              </button>
+              {% if forloop.last %}
+              <div style="padding-left: 20px;">
+              <button type="button" class="btn btn-sm btn-outline-success add-skill" data-bs-toggle="modal" data-bs-target="#addSkillModal" data-round-id="{{ round.id }}">
+                <i class="fas fa-plus"></i>add skill
+              </button>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div class="skill-button-container d-inline-block me-2 mb-2">
+            <div class="btn-group">
+              <button type="button" class="btn btn-sm btn-outline-secondary add-skill" data-bs-toggle="modal" data-bs-target="#addSkillModal" data-round-id="{{ round.id }}">
+                Add Skill <i class="fas fa-plus"></i>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% empty %}
+<div class="text-center text-muted">
+  <p>No interview rounds added yet.</p>
+</div>
+{% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Skill Modal -->
+<div class="modal fade" id="addSkillModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Skill</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="roundIdInput" name="round_id">
+        <div class="mb-3">
+          <label class="form-label">Skill Name</label>
+          <div class="position-relative">
+            <input type="text" class="form-control" id="skillNameInput" required>
+            <div id="skillAutocompleteContainer" class="autocomplete-suggestions bg-white border rounded shadow-sm position-absolute w-100 d-none" style="z-index: 1050; max-height: 200px; overflow-y: auto;"></div>
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          Do you want to add this skill?
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-primary" id="confirmAddSkill">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Skill Topics Modal -->
+<div class="modal fade" id="skillTopicsModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Topics for <span id="currentSkillName"></span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="roundSkillIdInput" name="round_skill_id">
+          
+          <!-- Topics Container -->
+          <div id="topicsContainer" class="mb-3">
+            <!-- Topics will be loaded here dynamically -->
+          </div>
+          
+          <!-- Add Topic Form -->
+          <div class="card mt-4">
+            <div class="card-header bg-primary">
+              <h6 class="mb-0 text-white">Add New Topic</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label">Topic Name</label>
+                <div class="position-relative">
+                  <input type="text" class="form-control mt-2" id="topicNameInput" placeholder="Enter topic name" required>
+                  <div id="autocompleteContainer" class="autocomplete-suggestions bg-white border rounded shadow-sm position-absolute w-100 d-none" style="z-index: 1050; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Weight (1-10)</label>
+                <input type="number" class="form-control" id="topicWeightInput" min="1" max="10" value="5" required>
+              </div>
+              <button type="button" class="btn btn-primary" id="addTopicBtn">Add Topic</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- Add Round Modal -->
+<div class="modal fade" id="addRoundModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Interview Round</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="addRoundForm" class="needs-validation" novalidate>
+        <div class="modal-body">
+          <input type="hidden" name="job_role_id" value="{{ job_role.id }}">
+          <div class="mb-3">
+            <label class="form-label">Round Name</label>
+            <input type="text" class="form-control" name="round_name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Round Type</label>
+            <select class="form-select" name="round_type" required>
+              <option value="">Select Type</option>
+              <option value="SYSTEM">System</option>
+              <option value="VIRTUAL_FACE_TO_FACE">Virtual Face to Face</option>
+              <option value="FACE_TO_FACE">Face to Face</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Round</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Global variables
+    let allTopics = [];
+    let allSkills = [];  // New variable for skills
+
+    // Set round ID and setup autocomplete when opening the Add Skill modal
+    const addSkillModal = document.getElementById('addSkillModal');
+    if (addSkillModal) {
+      addSkillModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const roundId = button.getAttribute('data-round-id');
+        document.getElementById('roundIdInput').value = roundId;
+        document.getElementById('skillNameInput').value = ''; // Clear input on open
+        fetchAllSkills(); // Fetch skills when modal opens
+      });
+    }
+
+    // Handle the "Yes" button click in the add skill modal
+    const confirmAddSkill = document.getElementById('confirmAddSkill');
+    if (confirmAddSkill) {
+      confirmAddSkill.addEventListener('click', function() {
+        const roundId = document.getElementById('roundIdInput').value;
+        const skillName = document.getElementById('skillNameInput').value.trim();
+        
+        if (!skillName) {
+          alert('Please enter a skill name');
+          return;
+        }
+        
+        const formData = new FormData();
+        formData.append('round_id', roundId);
+        formData.append('skill_name', skillName);
+        
+        fetch('{% url "add_skill_to_round" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const skillsContainer = document.querySelector(`.skills-container[data-round-id="${roundId}"]`);
+            const firstSkillButton = skillsContainer.querySelector('.btn-outline-secondary.add-skill');
+            if (firstSkillButton) {
+              firstSkillButton.closest('.skill-button-container').remove();
+            }
+            const existingPlusButton = skillsContainer.querySelector('.btn-outline-success.add-skill');
+            if (existingPlusButton) {
+              existingPlusButton.remove();
+            }
+            const newSkillHtml = `
+              <div class="skill-button-container d-inline-block me-2 mb-2">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-primary skill-details-btn" data-round-skill-id="${data.round_skill_id}" data-skill-name="${data.skill_name}">
+                    ${data.skill_name}
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-skill" data-round-skill-id="${data.round_skill_id}">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <div style="padding-left:20px;">
+                    <button type="button" class="btn btn-sm btn-outline-success add-skill" data-bs-toggle="modal" data-bs-target="#addSkillModal" data-round-id="${roundId}">
+                      <i class="fas fa-plus"></i>add skill
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+            skillsContainer.insertAdjacentHTML('beforeend', newSkillHtml);
+            const modal = bootstrap.Modal.getInstance(addSkillModal);
+            modal.hide();
+            document.getElementById('skillNameInput').value = '';
+          } else {
+            alert('Failed to add skill: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while adding the skill.');
+        });
+      });
+    }
+
+    // Handle skill removal
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.remove-skill')) {
+        const button = e.target.closest('.remove-skill');
+        const roundSkillId = button.getAttribute('data-round-skill-id');
+        const skillContainer = button.closest('.skill-button-container');
+        const skillsContainer = skillContainer.closest('.skills-container');
+        const roundId = skillsContainer.getAttribute('data-round-id');
+        
+        if (roundSkillId) {
+          const formData = new FormData();
+          formData.append('round_skill_id', roundSkillId);
+          
+          fetch('{% url "remove_skill_from_round" %}', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              const hasAddButton = skillContainer.querySelector('.add-skill') !== null;
+              skillContainer.remove();
+              if (skillsContainer.children.length === 0) {
+                const firstSkillHtml = `
+                  <div class="skill-button-container d-inline-block me-2 mb-2">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-sm btn-outline-secondary add-skill" data-bs-toggle="modal" data-bs-target="#addSkillModal" data-round-id="${roundId}">
+                        Add Skill <i class="fas fa-plus"></i>
+                      </button>
+                    </div>
+                  </div>
+                `;
+                skillsContainer.innerHTML = firstSkillHtml;
+              } else if (hasAddButton) {
+                const lastSkillContainer = skillsContainer.children[skillsContainer.children.length - 1];
+                const btnGroup = lastSkillContainer.querySelector('.btn-group');
+                const addButtonHtml = `
+                  <div style="padding-left:20px;">
+                    <button type="button" class="btn btn-sm btn-outline-success add-skill" data-bs-toggle="modal" data-bs-target="#addSkillModal" data-round-id="${roundId}">
+                      <i class="fas fa-plus"></i>add skill
+                    </button>
+                  </div>
+                `;
+                btnGroup.insertAdjacentHTML('beforeend', addButtonHtml);
+              }
+            } else {
+              alert('Failed to remove skill: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while removing the skill.');
+          });
+        }
+      }
+    });
+
+    // Handle clicking on a skill to show topics
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.skill-details-btn')) {
+        const button = e.target.closest('.skill-details-btn');
+        const roundSkillId = button.getAttribute('data-round-skill-id');
+        const skillName = button.getAttribute('data-skill-name');
+        
+        document.getElementById('currentSkillName').textContent = skillName;
+        document.getElementById('roundSkillIdInput').value = roundSkillId;
+        document.getElementById('topicsContainer').innerHTML = '';
+        
+        loadTopicsForSkill(roundSkillId);
+        
+        const skillTopicsModal = new bootstrap.Modal(document.getElementById('skillTopicsModal'));
+        skillTopicsModal.show();
+      }
+    });
+
+    // Topic Modal Setup
+    const skillTopicsModal = document.getElementById('skillTopicsModal');
+    if (skillTopicsModal) {
+      skillTopicsModal.addEventListener('show.bs.modal', function() {
+        fetchAllTopics();
+        document.getElementById('topicNameInput').value = '';
+        document.getElementById('topicWeightInput').value = '5';
+      });
+    }
+
+    // Event delegation for remove-topic buttons
+    const topicsContainer = document.getElementById('topicsContainer');
+    if (topicsContainer) {
+      topicsContainer.addEventListener('click', function(e) {
+        const removeButton = e.target.closest('.remove-topic');
+        if (removeButton) {
+          const topicId = removeButton.getAttribute('data-topic-id');
+          removeTopicFromSkill(topicId);
+        }
+      });
+    }
+
+    // Fetch all skills for autocomplete
+    function fetchAllSkills() {
+      fetch('/api/all-skills/')
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            allSkills = data.skills.map(skill => skill.skill_name);
+            setupSkillAutocomplete();
+          } else {
+            console.error('Failed to load skills:', data.message);
+          }
+        })
+        .catch(error => console.error('Error fetching skills:', error));
+    }
+
+    // Setup autocomplete functionality for skills
+    function setupSkillAutocomplete() {
+      const skillInput = document.getElementById('skillNameInput');
+      const autocompleteContainer = document.getElementById('skillAutocompleteContainer');
+      if (!skillInput || !autocompleteContainer) return;
+
+      skillInput.addEventListener('input', function() {
+        const inputValue = this.value.trim().toLowerCase();
+        if (!inputValue) {
+          autocompleteContainer.innerHTML = '';
+          autocompleteContainer.classList.add('d-none');
+          return;
+        }
+        const matchedSkills = allSkills.filter(skill => skill.toLowerCase().includes(inputValue));
+        if (matchedSkills.length > 0) {
+          autocompleteContainer.innerHTML = '';
+          matchedSkills.forEach(skill => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.className = 'p-2 border-bottom suggestion-item';
+            suggestionItem.style.cursor = 'pointer';
+            suggestionItem.innerHTML = skill;
+            suggestionItem.addEventListener('click', function() {
+              skillInput.value = skill;
+              autocompleteContainer.classList.add('d-none');
+            });
+            autocompleteContainer.appendChild(suggestionItem);
+          });
+          autocompleteContainer.classList.remove('d-none');
+        } else {
+          autocompleteContainer.innerHTML = '';
+          autocompleteContainer.classList.add('d-none');
+        }
+      });
+
+      // Hide autocomplete when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!skillInput.contains(e.target) && !autocompleteContainer.contains(e.target)) {
+          autocompleteContainer.classList.add('d-none');
+        }
+      });
+    }
+
+    // Fetch all topics for autocomplete
+    function fetchAllTopics() {
+      fetch('/api/all-topics/')
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            allTopics = data.topics.map(topic => topic.tag_name);
+            setupAutocomplete();
+          } else {
+            console.error('Failed to load topics:', data.message);
+          }
+        })
+        .catch(error => console.error('Error fetching topics:', error));
+    }
+
+    // Setup autocomplete functionality for topics
+    function setupAutocomplete() {
+      const topicInput = document.getElementById('topicNameInput');
+      const autocompleteContainer = document.getElementById('autocompleteContainer');
+      if (!topicInput || !autocompleteContainer) return;
+
+      topicInput.addEventListener('input', function() {
+        const inputValue = this.value.trim().toLowerCase();
+        if (!inputValue) {
+          autocompleteContainer.innerHTML = '';
+          autocompleteContainer.classList.add('d-none');
+          return;
+        }
+        const matchedTopics = allTopics.filter(topic => topic.toLowerCase().includes(inputValue));
+        if (matchedTopics.length > 0) {
+          autocompleteContainer.innerHTML = '';
+          matchedTopics.forEach(topic => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.className = 'p-2 border-bottom suggestion-item';
+            suggestionItem.style.cursor = 'pointer';
+            suggestionItem.innerHTML = topic;
+            suggestionItem.addEventListener('click', function() {
+              topicInput.value = topic;
+              autocompleteContainer.classList.add('d-none');
+            });
+            autocompleteContainer.appendChild(suggestionItem);
+          });
+          autocompleteContainer.classList.remove('d-none');
+        } else {
+          autocompleteContainer.innerHTML = '';
+          autocompleteContainer.classList.add('d-none');
+        }
+      });
+    }
+
+    // Load topics for a skill
+    function loadTopicsForSkill(roundSkillId) {
+      fetch(`/api/round-skill/${roundSkillId}/topics/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const topicsContainer = document.getElementById('topicsContainer');
+            if (data.topics.length === 0) {
+              topicsContainer.innerHTML = '<div class="alert alert-primary">No topics added yet.</div>';
+              return;
+            }
+            let topicsHtml = '<div class="topics-list">';
+            data.topics.forEach((topic, index) => {
+              const isLast = index === data.topics.length - 1;
+              topicsHtml += `
+                <div class="topic-item d-inline-block me-2 mb-2">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" title="Weight: ${topic.weight}">
+                      ${topic.tag_name}
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-topic" data-topic-id="${topic.id}">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    ${isLast ? `
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            });
+            topicsHtml += '</div>';
+            topicsContainer.innerHTML = topicsHtml;
+
+            const addTopicPlusBtn = document.getElementById('addTopicPlusBtn');
+            if (addTopicPlusBtn) {
+              addTopicPlusBtn.addEventListener('click', function() {
+                document.getElementById('topicNameInput').focus();
+              });
+            }
+          } else {
+            alert('Failed to load topics: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while loading topics.');
+        });
+    }
+
+    // Add topic to skill
+    const addTopicBtn = document.getElementById('addTopicBtn');
+    if (addTopicBtn) {
+      addTopicBtn.addEventListener('click', function() {
+        const topicName = document.getElementById('topicNameInput').value.trim();
+        const weight = document.getElementById('topicWeightInput').value;
+        const roundSkillId = document.getElementById('roundSkillIdInput').value;
+
+        if (!topicName) {
+          alert('Please enter a topic name');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('round_skill_id', roundSkillId);
+        formData.append('topic_name', topicName);
+        formData.append('weight', weight);
+
+        fetch('/api/round-skill/add-topic/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.status === 'success') {
+            document.getElementById('topicNameInput').value = '';
+            document.getElementById('topicWeightInput').value = '5';
+            loadTopicsForSkill(roundSkillId);
+          } else {
+            alert('Failed to add topic: ' + (data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error adding topic:', error);
+          alert('An error occurred while adding the topic: ' + error.message);
+        });
+      });
+    }
+
+    // Remove topic from skill
+    function removeTopicFromSkill(topicId) {
+      const formData = new FormData();
+      formData.append('topic_id', topicId);
+
+      fetch('/api/round-skill/remove-topic/', {
+        'method': 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const roundSkillId = document.getElementById('roundSkillIdInput').value;
+          loadTopicsForSkill(roundSkillId);
+        } else {
+          alert('Failed to remove topic: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while removing the topic.');
+      });
+    }
+
+    // Save all topics
+    const saveTopicsBtn = document.getElementById('saveTopicsBtn');
+    if (saveTopicsBtn) {
+      saveTopicsBtn.addEventListener('click', function() {
+        const roundSkillId = document.getElementById('roundSkillIdInput').value;
+        
+        fetch('/api/round-skill/save-topics/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            round_skill_id: roundSkillId
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('skillTopicsModal'));
+            modal.hide();
+            alert('Topics saved successfully!');
+          } else {
+            alert('Failed to save topics: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while saving topics.');
+        });
+      });
+    }
+
+    // Handle add round form submission
+    const addRoundForm = document.getElementById('addRoundForm');
+    if (addRoundForm) {
+      addRoundForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!this.checkValidity()) {
+          this.classList.add('was-validated');
+          return;
+        }
+        
+        const formData = new FormData(this);
+        
+        fetch('{% url "add_interview_round" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const roundsContainer = document.querySelector('.card-body');
+            const noRoundsMsg = roundsContainer.querySelector('.text-center.text-muted');
+            if (noRoundsMsg) {
+              noRoundsMsg.remove();
+            }
+            const newRoundHtml = `
+              <div class="round-container mb-4">
+                <div class="card">
+                  <div class="card-header bg-primary">
+                    <h6 class="mb-0 text-white">Round ${data.round_number}: ${data.round_name} | ${data.round_type}</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="skills-container" data-round-id="${data.round_id}">
+                      <div class="skill-button-container d-inline-block me-2 mb-2">
+                        <div class="btn-group">
+                          <button type="button" class="btn btn-sm btn-outline-secondary add-skill" data-bs-toggle="modal" data-bs-target="#addSkillModal" data-round-id="${data.round_id}">
+                            Add Skill <i class="fas fa-plus"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>  
+            `;
+            roundsContainer.insertAdjacentHTML('beforeend', newRoundHtml);
+            const addRoundModal = document.getElementById('addRoundModal');
+            const modal = bootstrap.Modal.getInstance(addRoundModal);
+            modal.hide();
+            addRoundForm.reset();
+          } else {
+            alert('Failed to add round: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while adding the round.');
+        });
+      });
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  });
+</script>
+{% endblock %}

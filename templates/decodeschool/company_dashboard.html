@@ -1,0 +1,340 @@
+{% extends 'decodeschool/base.html' %}
+{% load static %}
+{% block breadcrumb %}
+<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+  <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Company Dashboard</li>
+</ol>
+<h6 class="font-weight-bolder mb-0">Company Dashboard</h6>
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- First Row: Pie Chart and Summary Statistics -->
+  <div class="row">
+    <div class="col-lg-6">
+      <!-- Pie Chart Section -->
+      <div class="card shadow h-100">
+        <div class="card-header pb-0">
+          <h6>Company Type Distribution</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="pieChart" style="max-height: 300px;"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <!-- Year-Wise Bar Chart -->
+      <div class="card shadow h-100">
+        <div class="card-header pb-0">
+          <h6>Year-Wise Company Counts</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="barChart" style="max-height: 300px;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row: Summary Statistics -->
+  <div class="row mt-4">
+    <div class="col-lg-12">
+      <div class="card shadow h-100">
+        <div class="card-header pb-0">
+          <h6>Summary Statistics</h6>
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Product Companies
+              <span class="badge bg-primary rounded-pill">{{ product_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Service Companies
+              <span class="badge bg-success rounded-pill">{{ service_count }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Total Companies
+              <span class="badge bg-info rounded-pill">{{ total_companies }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Third Row: Skill-Based Company Visualization -->
+<div class="row mt-4">
+  <div class="col-lg-8">
+    <!-- Bar Chart Section -->
+    <div class="card shadow h-100">
+      <div class="card-header pb-0">
+        <h6>Company Distribution by Skills</h6>
+      </div>
+      <div class="card-body">
+        <canvas id="skillBarChart" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <!-- Table Section -->
+    <div class="card shadow h-100">
+      <div class="card-header pb-0">
+        <h6>Company Distribution by Skills</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive p-0">
+          <table class="table align-items-center mb-0" id="skill-company-table">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Skill</th>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Company Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fourth Row: Salary Band Visualization -->
+<div class="row mt-4">
+  <div class="col-lg-8">
+    <!-- Bar Chart Section -->
+    <div class="card shadow h-100">
+      <div class="card-header pb-0">
+        <h6>Salary-Based Company Metrics</h6>
+      </div>
+      <div class="card-body">
+        <canvas id="salaryBandBarChart" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <!-- Table Section -->
+    <div class="card shadow h-100">
+      <div class="card-header pb-0">
+        <h6>Salary-Based Company Metrics</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive p-0">
+          <table class="table align-items-center mb-0" id="salary-band-table">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Salary Band</th>
+                <th class="text-uppercase text-xxs font-weight-bolder opacity-7">Company Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script>
+  // Pie Chart Data
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  const pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Product-Based', 'Service-Based'],
+      datasets: [{
+        data: [{{ product_count }}, {{ service_count }}],
+        backgroundColor: ['#007bff', '#28a745'], // Consistent colors
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        datalabels: {
+          formatter: (value, ctx) => {
+            const label = ctx.chart.data.labels[ctx.dataIndex];
+            return `${label}: ${value}`;
+          },
+          color: '#fff',
+          font: {
+            weight: 'bold',
+            size: 14
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+  // Bar Chart Data
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  const barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: {{ years|safe }},
+      datasets: [
+        {
+          label: 'Product-Based Companies',
+          data: {{ product_data|safe }},
+          backgroundColor: '#007bff', // Consistent colors
+          borderColor: '#007bff',
+          borderWidth: 1
+        },
+        {
+          label: 'Service-Based Companies',
+          data: {{ service_data|safe }},
+          backgroundColor: '#28a745', // Consistent colors
+          borderColor: '#28a745',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          stacked: false,
+        },
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+        }
+      }
+    }
+  });
+
+ // Fetch skill-based company data from the API
+ fetch('/api/skill-company-data/')
+ .then(response => response.json())
+ .then(data => {
+   const tableBody = document.querySelector('#skill-company-table tbody');
+   const skillLabels = [];
+   const companyCounts = [];
+
+   // Populate the table
+   data.forEach(entry => {
+     const row = document.createElement('tr');
+     row.style.cursor = 'pointer'; // Make row clickable
+     row.addEventListener('click', () => {
+       // Redirect to company.html with skill filter
+       window.location.href = `/companies/?skill=${encodeURIComponent(entry.skill)}`;
+     });
+
+     const skillCell = document.createElement('td');
+     skillCell.textContent = entry.skill;
+     row.appendChild(skillCell);
+
+     const countCell = document.createElement('td');
+     countCell.textContent = entry.company_count;
+     row.appendChild(countCell);
+
+     tableBody.appendChild(row);
+
+     // Collect data for the bar chart
+     skillLabels.push(entry.skill);
+     companyCounts.push(entry.company_count);
+   });
+
+   // Render the bar chart (unchanged)
+   const ctx = document.getElementById('skillBarChart').getContext('2d');
+   new Chart(ctx, {
+     type: 'bar',
+     data: {
+       labels: skillLabels,
+       datasets: [{
+         label: 'Company Count',
+         data: companyCounts,
+         backgroundColor: '#007bff',
+         borderColor: '#007bff',
+         borderWidth: 1
+       }]
+     },
+     options: {
+       responsive: true,
+       scales: {
+         x: { stacked: false },
+         y: { beginAtZero: true }
+       },
+       plugins: {
+         legend: { position: 'top' }
+       }
+     }
+   });
+ })
+ .catch(error => console.error('Error fetching skill data:', error));
+
+// Fetch salary band-based company data from the API
+fetch('/api/salary-band-data/')
+ .then(response => response.json())
+ .then(data => {
+   const tableBody = document.querySelector('#salary-band-table tbody');
+   const salaryBands = [];
+   const companyCounts = [];
+
+   // Populate the table
+   data.forEach(entry => {
+     const row = document.createElement('tr');
+     row.style.cursor = 'pointer'; // Make row clickable
+     row.addEventListener('click', () => {
+       // Redirect to company.html with salary_band filter
+       window.location.href = `/companies/?salary_band=${encodeURIComponent(entry.salary_band)}`;
+     });
+
+     const salaryBandCell = document.createElement('td');
+     salaryBandCell.textContent = entry.salary_band;
+     row.appendChild(salaryBandCell);
+
+     const countCell = document.createElement('td');
+     countCell.textContent = entry.company_count;
+     row.appendChild(countCell);
+
+     tableBody.appendChild(row);
+
+     // Collect data for the bar chart
+     salaryBands.push(entry.salary_band);
+     companyCounts.push(entry.company_count);
+   });
+
+   // Render the bar chart (unchanged)
+   const ctx = document.getElementById('salaryBandBarChart').getContext('2d');
+   new Chart(ctx, {
+     type: 'bar',
+     data: {
+       labels: salaryBands,
+       datasets: [{
+         label: 'Company Count',
+         data: companyCounts,
+         backgroundColor: '#007bff',
+         borderColor: '#007bff',
+         borderWidth: 1
+       }]
+     },
+     options: {
+       responsive: true,
+       scales: {
+         x: { stacked: false },
+         y: { beginAtZero: true }
+       },
+       plugins: {
+         legend: { position: 'top' }
+       }
+     }
+   });
+ })
+ .catch(error => console.error('Error fetching salary band data:', error));
+</script>
+{% endblock %}

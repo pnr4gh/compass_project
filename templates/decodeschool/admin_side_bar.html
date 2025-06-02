@@ -1,0 +1,22 @@
+<div class="card">
+	<div class="card-header mx-4 p-3 text-center">
+	  <h6>Enroll Students</h6>
+  </div>
+  <div class="card-body pt-0 p-3 text-center">
+	
+	  <form method="post" id="uploadform" enctype="multipart/form-data" data_url="{% url 'upload_students' %}">
+		   {% csrf_token %}
+		   <input type="file" name="excel_file" class="form-control">  
+		   <button class="btn-primary form-control mt-2 text-dark" type="submit">Import</button>
+	   </form>
+  </div>
+
+  <div class="card-footer text-center pt-0 px-3 pb-2">
+	  <div class="row gx-4">
+		  <div class="col-auto">
+			  <div class="text-center">
+				  <p id="message_info"> </p>
+			  </div>
+		  </div>
+	  </div>
+</div>

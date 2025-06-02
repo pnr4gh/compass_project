@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+  
+    <!-- Meta -->
+
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-86E59HJN76"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-86E59HJN76');
+</script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Ramesh P Natarajan">    
+    <link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}"> 
+
+    <!--Webmaster Verification and google Analytics-->
+  	<meta name="google-site-verification" content="r6N4-7KV466JiWZ054EJNlj1fFDz0NIYMrj4jNujAWc" />
+      
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
+		<script>
+  			window.dataLayer = window.dataLayer || [];
+  			function gtag(){dataLayer.push(arguments);}
+  			gtag('js', new Date());
+
+  			gtag('config', 'UA-111292413-1');
+        </script>
+    
+    <!-- Other Search engine Validation -->
+    <meta name="msvalidate.01" content="FA234F16C2CB7F6C107ED3488E0D9830" />
+	<meta name="yandex-verification" content="a1488469453e6cce" />
+  
+    <!-- Share This-->
+	<script type="text/javascript" src="//platform-api.sharethis.com/js/sharethis.js#property=5a7870d410fe560012c5e968&product=sticky-share-buttons"></script>
+
+    {% block seo %}
+
+
+    {% endblock %}
+    
+    <!-- FontAwesome JS-->
+	<script defer src="{% static 'assets/fontawesome/js/all.min.js' %}"></script>
+    
+    <!-- Theme CSS -->  
+    <link id="theme-style" rel="stylesheet" href="{% static 'assets/css/theme-5.css' %}">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/monokai-sublime.min.css">
+
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    
+    <!-- Adsense -->
+    <script data-ad-client="ca-pub-5181933327362047" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+</head> 
+
+<body>
+    
+    <header class="header text-center">	
+            
+        <h1 class="blog-name pt-lg-4 mb-0"><a href="{% url 'home' %}">Decode School</a></h1>
+        
+        
+	    <nav class="navbar navbar-expand-lg navbar-dark" >
+           
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div id="navigation" class="collapse navbar-collapse flex-column" >
+				<div class="profile-section pt-3 pt-lg-0">
+				    <img class="profile-image mb-3 rounded-circle mx-auto" src="{% static 'assets/images/profile.jpg' %}" alt="Ramesh P Natarajan" >			
+					
+					<div class="bio mb-3">Hi, my name is Ramesh P Natarajan, I'm a Passionate Software Developer, Researcher and Technology Trainer from, India.<br><a href="{%url 'about_me' %}">Find out more about me</a></div><!--//bio-->
+					<ul class="social-list list-inline py-3 mx-auto">
+			            <li class="list-inline-item"><a href="https://twitter.com/decode_school"><i class="fab fa-twitter fa-fw"></i></a></li>
+			            <li class="list-inline-item"><a href="https://www.linkedin.com/in/ramesh-p-natarajan-822b7922/"><i class="fab fa-linkedin-in fa-fw"></i></a></li>
+			            <li class="list-inline-item"><a href="https://github.com/pnr4gh"><i class="fab fa-github-alt fa-fw"></i></a></li>
+			            <li class="list-inline-item"><a href="https://stackoverflow.com/users/9208267/pnr"><i class="fab fa-stack-overflow fa-fw"></i></a></li>
+			            <li class="list-inline-item"><a href="https://www.facebook.com/prof.pnramesh/"><i class="fab fa-facebook fa-fw"></i></a></li>
+			        </ul><!--//social-list-->
+			        <hr> 
+				</div><!--//profile-section-->
+				
+				<ul class="navbar-nav flex-column text-left">
+					<li class="nav-item">
+					    <a class="nav-link" href="{% url 'home' %}"><i class="fas  fa-lightbulb fa-fw mr-2"></i>Go to Home <span class="sr-only">(current)</span></a>
+					</li>
+					{% comment %}
+					
+					<li class="nav-item active">
+					    <a class="nav-link" href="{%url 'about_training' %}"><i class="fas fa-chalkboard-teacher fa-fw mr-2"></i>Online Training</a>
+					</li>
+					
+					{% endcomment %}
+				</ul>
+				
+			
+			</div>
+		</nav>
+    </header>
+    
+    <div class="main-wrapper">
+        <section class="cta-section theme-bg-light py-3">
+            <div class="container text-center">
+                <h2 class="heading">Instructor Led Online Training</h2>
+                <div class="intro mt-4"> &#65282;It is not just a Training, It is my Commitment to make you as a Developer.&#65282;</div>
+                
+            </div><!--//container-->
+        </section>
+        
+        {% block content %}
+        
+        {% endblock %}
+	    <footer class="footer text-center py-2 theme-bg-dark">
+		   
+	        <!--/* This template is free as long as you keep the footer attribution link. If you'd like to use the template without the attribution link, you can buy the commercial license via our website: themes.3rdwavemedia.com Thank you for your support. :) */-->
+            
+                         
+            
+            <small class="copyright">
+                Concept and Content Copyright &copy; 2017 by <a style="color:#ffffff;" href="https://decodeschool.com">Decode School</a> &nbsp; | &nbsp;
+
+                Template by <a href="http://themes.3rdwavemedia.com" target="_blank">Xiaoying Riley</a> &nbsp; | &nbsp;
+            
+                Click here to read our <a style="color:#ffffff;" href="{% static '/privacypolicy.htm' %}">Privacy Policy</a>
+            
+            </small>
+		   
+	    </footer>
+    
+    </div><!--//main-wrapper-->
+    
+    
+    
+    
+    <!-- *****CONFIGURE STYLE (REMOVE ON YOUR PRODUCTION SITE)******  
+    <div id="config-panel" class="config-panel d-none d-lg-block">
+        <div class="panel-inner">
+            <a id="config-trigger" class="config-trigger config-panel-hide text-center" href="#"><i class="fas fa-cog fa-spin mx-auto" data-fa-transform="down-6" ></i></a>
+            <h5 class="panel-title">Choose Colour</h5>
+            <ul id="color-options" class="list-inline mb-0">
+                <li class="theme-1  list-inline-item"><a data-style="assets/css/theme-1.css" href="#"></a></li>
+                <li class="theme-2  list-inline-item"><a data-style="assets/css/theme-2.css" href="#"></a></li>
+                <li class="theme-3  list-inline-item"><a data-style="assets/css/theme-3.css" href="#"></a></li>
+                <li class="theme-4  list-inline-item"><a data-style="assets/css/theme-4.css" href="#"></a></li>
+                <li class="theme-5  list-inline-item"><a data-style="assets/css/theme-5.css" href="#"></a></li>
+                <li class="theme-6  list-inline-item"><a data-style="assets/css/theme-6.css" href="#"></a></li>
+                <li class="theme-7  list-inline-item"><a data-style="assets/css/theme-7.css" href="#"></a></li>
+                <li class="theme-8  list-inline-item"><a data-style="assets/css/theme-8.css" href="#"></a></li>
+            </ul>
+            <a id="config-close" class="close" href="#"><i class="fa fa-times-circle"></i></a>
+        </div>
+    </div>
+--> 
+    
+       
+    <!-- Javascript -->          
+    <script src="{% static 'assets/plugins/jquery-3.4.1.min.js' %}"></script>
+    <script src="{% static 'assets/plugins/popper.min.js' %}"></script> 
+    <script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script> 
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
+    <script src="{% static 'assets/js/blog.js' %}"></script>
+
+    <!-- Style Switcher (REMOVE ON YOUR PRODUCTION SITE) 
+    <script src="assets/js/demo/style-switcher.js"></script>  -->   
+
+    <script>
+        $(document).ready(function(){
+            $('#subscribe_btn').click(function(){
+                var email = $('#semail').val();
+                if(email !== "" && IsEmail(email)==true)
+                {
+                    $.ajax({
+                        'url' : 'subscribe/',
+                        'type' : 'GET',
+                        'data' : {'email':email},
+                        success : function(data) {
+                            $('#semail').val('');
+                            alert(data['message']);
+                        }
+                       
+
+                    });
+                }
+                else{
+                    alert("Enter your Valid Email id");
+                }
+
+            });
+
+        });
+
+        function IsEmail(email) {
+            var regex = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            if(!regex.test(email)) {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+}
+    </script>
+    
+
+</body>
+</html>

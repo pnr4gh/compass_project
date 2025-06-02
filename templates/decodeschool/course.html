@@ -1,0 +1,159 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %} 
+{% block course %}
+active
+{% endblock %}
+
+{% block breadcrumb %}
+	<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+		<li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+		<li class="breadcrumb-item text-sm text-dark active" aria-current="page">Courses</li>
+  	</ol>
+  	<h6 class="font-weight-bolder mb-0">Courses</h6>
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <button id="createCourseBtn" class="btn btn-primary mb-3">Create Course</button>
+        <div class="row" id="courseList">
+            {% for course in courses %}
+                {% if course.created_by == user %}
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header pb-0">
+                                <div class="col-md-8 d-flex align-items-center">
+                                    <h5 class="card-title">
+                                        <a class="text-primary" href="{% url 'course_detail' course.id %}">{{ course.course_title }}</a>
+                                    </h5>
+                                </div>
+                                
+                            </div>
+                            <div class="card-body">
+                            
+                                <ul class="list-group">
+                                    <li class="list-group-item border-0 ps-0 pt-0 text-sm">
+                                        <strong class="text-dark">Number of Users Enrolled: </strong> 
+                                        &nbsp; {{ course.get_enrolled_count }}
+                                    </li>  
+                                    <li class="list-group-item border-0 ps-0 pt-0 text-sm">
+                                        <strong class="text-dark">Number of Assignments:</strong> 
+                                        &nbsp; {{ course.get_assignment_count }}
+                                </li>
+                                <li class="list-group-item border-0 ps-0 pt-0 text-sm">
+                                            <strong class="text-dark">Total Problems:</strong> 
+                                        &nbsp;{{ course.get_problem_count }}
+                                    </li>
+                                <li class="list-group-item border-0 ps-0 pt-0 text-sm">
+                                        <strong class="text-dark">Start Date: </strong> 
+                                        &nbsp;{{ course.start_date }}
+                                    </li>
+                                <li class="list-group-item border-0 ps-0 pt-0 text-sm">
+                                            <strong class="text-dark">End Date: </strong> 
+                                        &nbsp;{{ course.end_date }}
+                                    </li>
+                                    <li class="list-group-item border-0 ps-0 pt-0 text-sm">
+                                        <strong class="text-dark">Instructor: </strong> 
+                                    &nbsp;{{ course.created_by.username }}
+                                    </li>
+                                
+                                </ul>
+                                <button class="btn btn-primary edit-course-btn float-end" data-id="{{ course.id }}">Edit</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="courseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="courseModalLabel">Create/Edit Course</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="courseForm">
+                        <input type="hidden" id="courseId">
+                        <div class="mb-3">
+                            <label for="courseTitle" class="form-label">Course Title</label>
+                            <input type="text" class="form-control" id="courseTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary float-end">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#createCourseBtn').click(function() {
+                $('#courseModal').modal('show');
+            });
+
+
+            $('.edit-course-btn').click(function() {
+                var courseId = $(this).data('id');
+                $.ajax({
+                    url: '/course/' + courseId + '/edit/',
+                    method: 'GET',
+                    success: function(data) {
+                        $('#courseId').val(data.id);
+                        $('#courseTitle').val(data.course_title);
+                        $('#startDate').val(data.start_date);
+                        $('#endDate').val(data.end_date);
+                        $('#courseModal').modal('show');
+                    }
+                });
+            });
+
+            $('#courseForm').submit(function(e) {
+                e.preventDefault();
+                var courseId = $('#courseId').val();
+                var courseTitle = $('#courseTitle').val();
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+                if(startDate<=endDate)
+                {
+                    var url = courseId ? '/course/' + courseId + '/edit/' : '/course/create/';
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        data: {
+                            course_title: courseTitle,
+                            start_date: startDate,
+                            end_date: endDate,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function(data) {
+                            $('#courseModal').modal('hide');
+                            location.reload();
+                        }
+                    });
+                }
+                else{
+                    alert("Start End Cannot be greater than End Date");
+                }
+            });
+        });
+    </script>
+{% endblock %}

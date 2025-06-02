@@ -1,0 +1,604 @@
+{% extends "decodeschool/base.html" %}
+{% load static %}
+{% block job_roles %}active{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Main Content Area -->
+    {% if not company %}
+    <div class="col-md-11 ms-0 px-2">
+      <div class="container-fluid mt-4">
+        <div style="padding-left: 930px;">
+        <a href="{% url 'company_list' %}" class="btn btn-primary">Back</a>
+        </div>
+        <!-- Top Filter Section -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary">
+            <h5 class="card-title mb-0 text-white">Filters</h5>
+          </div>
+          <div class="card-body">
+            <!-- Filter Options -->
+            <form id="filterForm" action="{% if company %}{% url 'company_job_roles' company.id %}{% else %}{% url 'job_role_list' %}{% endif %}" method="GET">
+              <div class="row mb-4">
+                <!-- Company Dropdown -->
+<div class="col-md-4">
+  <label for="companyFilter" class="form-label fw-bold">Company</label>
+  <select class="form-select" id="companyFilter" name="company_filter">
+    <option value="" data-company-type="">All Companies</option>
+    {% for comp in all_companies %}
+      <option value="{{ comp.id }}"
+              data-company-type="{{ comp.company_type }}"
+              {% if company_filter == comp.id|stringformat:'s' %}selected{% endif %}>
+        {{ comp.name }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+                
+                <!-- Company Type -->
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Company Type</label>
+                  <div class="d-flex gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="company_type" id="typeAll" value="" {% if not company_type %}checked{% endif %}>
+                      <label class="form-check-label" for="typeAll">All</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="company_type" id="typeService" value="SERVICE" {% if company_type == "SERVICE" %}checked{% endif %}>
+                      <label class="form-check-label" for="typeService">Service</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="company_type" id="typeProduct" value="PRODUCT" {% if company_type == "PRODUCT" %}checked{% endif %}>
+                      <label class="form-check-label" for="typeProduct">Product</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Salary Range -->
+                <div class="col-md-4">
+                  <label for="salaryRange" class="form-label fw-bold">Salary Range (LPA)</label>
+                  <select class="form-select" id="salaryRange" name="salary_range">
+                    <option value="">Any Salary</option>
+                    <option value="0-5" {% if salary_range == "0-5" %}selected{% endif %}>0-5 LPA</option>
+                    <option value="5-10" {% if salary_range == "5-10" %}selected{% endif %}>5-10 LPA</option>
+                    <option value="10-15" {% if salary_range == "10-15" %}selected{% endif %}>10-15 LPA</option>
+                    <option value="15-20" {% if salary_range == "15-20" %}selected{% endif %}>15-20 LPA</option>
+                    <option value="20+" {% if salary_range == "20+" %}selected{% endif %}>20+ LPA</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row">
+                <!-- Year -->
+                <div class="col-md-4">
+                  <label for="year" class="form-label fw-bold">Year</label>
+                  <select class="form-select" id="year" name="year">
+                    <option value="">Any Year</option>
+                    {% for y in years %}
+                      <option value="{{ y }}" {% if year == y|stringformat:'s' %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Rest of the code remains the same -->
+        <!-- Company Details Card (if viewing a specific company) -->
+        {% if company %}
+        <div style="padding-left: 1100px;">
+          <a href="{% url 'company_list' %}" class="btn btn-primary">Back</a>
+          </div>
+        <div class="card shadow-sm mb-4 ">
+          <div class="card-header bg-primary" style= "margin-left: -12px; margin-right: -12px;">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0 text-white">Company Details</h5>
+              <button class="btn btn-white" type="button" data-bs-toggle="modal" data-bs-target="#addJobRoleModal">
+                <i class="fas fa-plus me-1"></i> Add Role
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center">
+              <!-- Company Name Inline Edit -->
+              <div class="col-md-6">
+                <div class="mb-3" id="companyNameContainer">
+                  <label class="form-label fw-bold">Company Name</label>
+                  <div class="d-flex align-items-center">
+                    <span id="companyNameText" class="me-2 fs-5 fw-semibold">{{ company.name }}</span>
+                    <input type="text" 
+                           class="form-control d-none me-2" 
+                           id="editCompanyNameInput" 
+                           value="{{ company.name }}" 
+                           style="width: 200px;"/>
+                    <i class="fas fa-edit text-primary cursor-pointer me-2" id="editNameIcon"></i>
+                    <button class="btn btn-primary btn-sm d-none ms-2" id="updateNameBtn">Update</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Company Type Inline Edit -->
+              <div class="col-md-6">
+                <div class="mb-3" id="companyTypeContainer">
+                  <label class="form-label fw-bold">Company Type</label>
+                  <div class="d-flex align-items-center">
+                    <span id="companyTypeText" class="me-2 fs-5 fw-semibold">{{ company.get_company_type_display }}</span>
+                    <select class="form-select d-none me-2" 
+                            id="editCompanyTypeSelect" 
+                            style="width: 200px;">
+                        <option value="SERVICE" {% if company.company_type == "SERVICE" %}selected{% endif %}>Service Based</option>
+                        <option value="PRODUCT" {% if company.company_type == "PRODUCT" %}selected{% endif %}>Product Based</option>
+                    </select>
+                    <i class="fas fa-edit text-primary cursor-pointer me-2" id="editTypeIcon"></i>
+                    <button class="btn btn-primary btn-sm d-none ms-2" id="updateTypeBtn">Update</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Job Roles Card -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary" style= "margin-left: -12px; margin-right: -12px;">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0 text-white">Job Roles</h5>
+            </div>
+          </div>
+        {% endif %}
+         
+
+        {% if not company %}
+        <!-- Job Roles Card -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0 text-white">Job Roles</h5>
+            </div>
+          </div>
+        {% endif %}
+          <div class="card-body">
+            <!-- Search Bar -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <form id="searchForm" action="{% if company %}{% url 'company_job_roles' company.id %}{% else %}{% url 'job_role_list' %}{% endif %}" method="GET">
+                  <label for="searchInput" class="form-label fw-bold">Search Job Roles</label>
+                  <div class="d-flex">
+                    <input type="text" class="form-control" id="searchInput" name="search" 
+                    value="{{ search_query }}" placeholder="Search job roles..." style="margin-right: 8px;">
+                    <button class="btn btn-primary" type="submit" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            
+            
+            <!-- Job Roles as Buttons -->
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              {% for job in job_roles %}
+              <a href="{% url 'interview_rounds' job.id %}" class="btn btn-outline-primary">
+                {{ job.title }}
+              </a>
+              {% empty %}
+              <p class="text-muted">No job roles found</p>
+              {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if job_roles.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center">
+                {% if job_roles.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if company_type %}&company_type={{ company_type }}{% endif %}{% if company_filter %}&company_filter={{ company_filter }}{% endif %}{% if salary_range %}&salary_range={{ salary_range }}{% endif %}{% if year %}&year={{ year }}{% endif %}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ job_roles.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if company_type %}&company_type={{ company_type }}{% endif %}{% if company_filter %}&company_filter={{ company_filter }}{% endif %}{% if salary_range %}&salary_range={{ salary_range }}{% endif %}{% if year %}&year={{ year }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                {% endif %}
+                
+                {% for i in page_range %}
+                <li class="page-item {% if job_roles.number == i %}active{% endif %}">
+                  <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if company_type %}&company_type={{ company_type }}{% endif %}{% if company_filter %}&company_filter={{ company_filter }}{% endif %}{% if salary_range %}&salary_range={{ salary_range }}{% endif %}{% if year %}&year={{ year }}{% endif %}">{{ i }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if job_roles.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ job_roles.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if company_type %}&company_type={{ company_type }}{% endif %}{% if company_filter %}&company_filter={{ company_filter }}{% endif %}{% if salary_range %}&salary_range={{ salary_range }}{% endif %}{% if year %}&year={{ year }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ job_roles.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if company_type %}&company_type={{ company_type }}{% endif %}{% if company_filter %}&company_filter={{ company_filter }}{% endif %}{% if salary_range %}&salary_range={{ salary_range }}{% endif %}{% if year %}&year={{ year }}{% endif %}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                  </a>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Rest of the modals and scripts remain the same -->
+<!-- Add Job Role Modal -->
+{% if company %}
+<div class="modal fade" id="addJobRoleModal" tabindex="-1" aria-labelledby="addJobRoleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addJobRoleModalLabel">Add New Job Role</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addJobRoleForm">
+          <input type="hidden" name="company" value="{{ company.id }}">
+          
+          <div class="mb-3">
+            <label for="jobTitle" class="form-label">Job Title*</label>
+            <input type="text" class="form-control" id="jobTitle" name="title" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="packageInLPA" class="form-label">Package (in LPA)*</label>
+            <input type="number" class="form-control" id="packageInLPA" name="package_in_LPA" step="0.01" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="jobDescription" class="form-label">Job Description*</label>
+            <textarea class="form-control" id="jobDescription" name="job_description" rows="3" maxlength="300" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="hiringProcess" class="form-label">Hiring Process*</label>
+            <select class="form-select" id="hiringProcess" name="hiring_process" required>
+              <option value="">Select hiring process</option>
+              <option value="CONTEST">Contest Hiring</option>
+              <option value="CAMPUS">Campus Hiring</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="year" class="form-label">Year*</label>
+            <input type="number" class="form-control" id="year" name="year" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submitJobRole">Add Role</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Success Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMessage">
+        Operation completed successfully!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // === Company Name Editing ===
+    const editNameIcon = document.getElementById('editNameIcon');
+    const companyNameText = document.getElementById('companyNameText');
+    const editCompanyNameInput = document.getElementById('editCompanyNameInput');
+    const updateNameBtn = document.getElementById('updateNameBtn');
+    
+    if (editNameIcon) {
+      editNameIcon.addEventListener('click', function() {
+        companyNameText.classList.add('d-none');
+        editCompanyNameInput.classList.remove('d-none');
+        updateNameBtn.classList.remove('d-none');
+        editNameIcon.classList.add('d-none');
+        editCompanyNameInput.focus();
+      });
+    }
+  
+    if (updateNameBtn) {
+      updateNameBtn.addEventListener('click', function() {
+        const newName = editCompanyNameInput.value.trim();
+        if (!newName) {
+          alert('Company name cannot be empty');
+          return;
+        }
+  
+        fetch('{% url "update_company" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            company_id: "{{ company.id }}",
+            company_name: newName
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            companyNameText.textContent = newName;
+            companyNameText.classList.remove('d-none');
+            editCompanyNameInput.classList.add('d-none');
+            updateNameBtn.classList.add('d-none');
+            editNameIcon.classList.remove('d-none');
+            showToast('Company name updated successfully!');
+          } else {
+            showToast('Failed to update: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showToast('An error occurred while updating');
+        });
+      });
+    }
+  
+    // === Company Type Editing ===
+    const editTypeIcon = document.getElementById('editTypeIcon');
+    const companyTypeText = document.getElementById('companyTypeText');
+    const editCompanyTypeSelect = document.getElementById('editCompanyTypeSelect');
+    const updateTypeBtn = document.getElementById('updateTypeBtn');
+  
+    if (editTypeIcon) {
+      editTypeIcon.addEventListener('click', function() {
+        companyTypeText.classList.add('d-none');
+        editCompanyTypeSelect.classList.remove('d-none');
+        updateTypeBtn.classList.remove('d-none');
+        editTypeIcon.classList.add('d-none');
+      });
+    }
+  
+    if (updateTypeBtn) {
+      updateTypeBtn.addEventListener('click', function() {
+        const newType = editCompanyTypeSelect.value;
+  
+        fetch('{% url "update_company" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            company_id: "{{ company.id }}",
+            company_type: newType
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            companyTypeText.textContent = 
+              newType === 'SERVICE' ? 'Service Based' : 'Product Based';
+            companyTypeText.classList.remove('d-none');
+            editCompanyTypeSelect.classList.add('d-none');
+            updateTypeBtn.classList.add('d-none');
+            editTypeIcon.classList.remove('d-none');
+            showToast('Company type updated successfully!');
+          } else {
+            showToast('Failed to update: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showToast('An error occurred while updating');
+        });
+      });
+    }
+  
+    // === Company Filter Dropdown ===
+    const companyFilter = document.getElementById('companyFilter');
+    const filterForm = document.getElementById('filterForm');
+  
+    if (companyFilter && filterForm) {
+      companyFilter.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const companyType = selectedOption.getAttribute('data-company-type');
+  
+        // Update Company Type radio buttons
+        if (companyType) {
+          const companyTypeRadios = document.querySelectorAll('input[name="company_type"]');
+          companyTypeRadios.forEach(radio => {
+            radio.checked = (radio.value === companyType);
+          });
+        } else {
+          // If "All Companies" is selected, reset to "All"
+          document.getElementById('typeAll').checked = true;
+        }
+  
+        // Submit the form to apply filters
+        filterForm.submit();
+      });
+    }
+  
+    // === Add Role Button Function ===
+    const addJobRoleForm = document.getElementById('addJobRoleForm');
+    const submitJobRole = document.getElementById('submitJobRole');
+    const addJobRoleModal = document.getElementById('addJobRoleModal');
+    
+    if (addJobRoleModal) {
+      const modal = new bootstrap.Modal(addJobRoleModal);
+  
+      if (submitJobRole) {
+        submitJobRole.addEventListener('click', function() {
+          if (!addJobRoleForm.checkValidity()) {
+            addJobRoleForm.reportValidity();
+            return;
+          }
+  
+          const formData = new FormData(addJobRoleForm);
+          const data = Object.fromEntries(formData.entries());
+  
+          fetch('{% url "add_job_role" %}', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              const jobRolesContainer = document.querySelector('.d-flex.flex-wrap.gap-2');
+              const newJobRole = document.createElement('a');
+              newJobRole.href = `/interview-rounds/${data.job_role_id}/`;
+              newJobRole.className = 'btn btn-outline-primary';
+              newJobRole.textContent = data.job_role_title;
+              jobRolesContainer.appendChild(newJobRole);
+  
+              showToast('Job role added successfully!');
+              addJobRoleForm.reset();
+              modal.hide();
+  
+              const noJobsMessage = jobRolesContainer.querySelector('.text-muted');
+              if (noJobsMessage) {
+                noJobsMessage.remove();
+              }
+            } else {
+              showToast('Failed to add job role: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while adding the job role');
+          });
+        });
+      }
+    }
+  
+    // === Filtering Process ===
+    if (filterForm) {
+      const filterInputs = filterForm.querySelectorAll('input[type="radio"], select');
+      filterInputs.forEach(input => {
+        // Skip companyFilter since it has its own listener
+        if (input.id !== 'companyFilter') {
+          input.addEventListener('change', function() {
+            filterForm.submit();
+          });
+        }
+      });
+  
+      // Reset filters functionality (if you had a reset button, which seems missing)
+      const resetButton = filterForm.querySelector('a.btn-outline-secondary');
+      if (resetButton) {
+        resetButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          filterForm.querySelectorAll('input[type="radio"]').forEach(radio => {
+            if (radio.value === '') {
+              radio.checked = true;
+            }
+          });
+          filterForm.querySelectorAll('select').forEach(select => {
+            select.value = '';
+          });
+          const searchInput = document.querySelector('input[name="search"]');
+          if (searchInput) {
+            searchInput.value = '';
+          }
+          filterForm.submit();
+        });
+      }
+    }
+  
+    // Handle search form submission
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+      searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const currentFilters = filterForm ? new FormData(filterForm) : new FormData();
+        const searchQuery = new FormData(this).get('search');
+        if (searchQuery) {
+          currentFilters.set('search', searchQuery);
+        }
+        const params = new URLSearchParams(currentFilters);
+        window.location.href = `${window.location.pathname}?${params.toString()}`;
+      });
+    }
+  
+    // === Helper Functions ===
+    function showToast(message) {
+      const toastEl = document.getElementById('successToast');
+      if (toastEl) {
+        document.getElementById('toastMessage').textContent = message;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      }
+    }
+  
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  
+    function updateURL(formData) {
+      const params = new URLSearchParams(formData);
+      const newURL = `${window.location.pathname}?${params.toString()}`;
+      window.history.pushState({}, '', newURL);
+    }
+  
+    function showActiveFilters() {
+      const activeFilters = document.querySelectorAll('input[type="radio"]:checked, select');
+      activeFilters.forEach(filter => {
+        if (filter.value) {
+          const filterName = filter.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+          const filterValue = filter.type === 'select-one' ? 
+            filter.options[filter.selectedIndex].text : 
+            filter.parentElement.querySelector('label').textContent;
+          showToast(`Active Filter: ${filterName} - ${filterValue}`);
+        }
+      });
+    }
+  
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.forEach((value, key) => {
+        const element = filterForm.elements[key];
+        if (element) {
+          if (element.type === 'radio') {
+            const radio = filterForm.querySelector(`input[name="${key}"][value="${value}"]`);
+            if (radio) radio.checked = true;
+          } else {
+            element.value = value;
+          }
+        }
+      });
+    });
+  });
+  </script>
+
+
+{% endblock %}

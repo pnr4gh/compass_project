@@ -1,0 +1,556 @@
+{% extends "decodeschool/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% load custom_tags %}
+{% block breadcrumb %}
+{% block aura %}
+active
+{%endblock%}
+<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Aura</li>
+</ol>
+<h6 class="font-weight-bolder mb-0">Aura</h6>
+{% endblock %}
+
+
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+{% if user.is_staff or user.is_superuser %}
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createQuizModal">
+    Create Quiz
+  </button>
+
+  <a href="{% url 'add_questions' %}" class="btn btn-secondary">Add Question</a>
+{% endif %}
+
+
+<!-- Bootstrap Modal for Creating Quiz -->
+<div class="modal fade" id="createQuizModal" tabindex="-1" aria-labelledby="createQuizModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="createQuizModalLabel">Create New Quiz</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createQuizForm" method="POST">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label for="id_name" class="form-label">Quiz Name</label>
+            {{ form.name }}
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="id_openDate" class="form-label">Open Date</label>
+                {{ form.openDate }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="id_closeDate" class="form-label">Close Date</label>
+                {{ form.closeDate }}
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="id_maxMarks" class="form-label">Max Marks</label>
+              {{ form.maxMarks }}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="id_noOfAttempts" class="form-label">Allowed Attempts</label>
+              {{ form.noOfAttempts }}
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            
+            <label for="id_noOfQuestions" class="form-label">Number of Questions</label>
+            {{ form.noOfQuestions }}
+            Total  questions: {{ all_selected_questions }}
+          </div>
+          
+          <div class="mb-3">
+            <label for="id_skill" class="form-label">Skill</label>
+            {{ form.skill }}
+          </div>
+          
+          <div class="mb-3">
+            <label for="id_tags" class="form-label">Tags</label>
+            {{ form.tags }}
+          </div>
+          
+          <div class="form-check form-switch mb-3">
+            {{ form.is_practice }}
+            <label class="form-check-label" for="id_is_practice">Is Practice Quiz?</label>
+          </div>
+          <button type="submit" class="btn btn-success w-100">Create Quiz</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Make sure your modal has these exact ID names -->
+<div class="modal fade" id="editQuizModal" tabindex="-1" aria-labelledby="editQuizModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="editQuizModalLabel">Edit Quiz</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="" id="editQuizForm">
+        {% csrf_token %}
+        <div class="modal-body">
+          <!-- Quiz Name -->
+          <div class="mb-3">
+            <label for="id_edit_name" class="form-label">Quiz Name</label>
+            <input type="text" class="form-control" id="id_edit_name" name="name" required>
+          </div>
+          
+          <!-- Dates Row -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_edit_openDate" class="form-label">Open Date</label>
+              <input type="date" class="form-control" id="id_edit_openDate" name="openDate" required>
+            </div>
+            <div class="col-md-6">
+              <label for="id_edit_closeDate" class="form-label">Close Date</label>
+              <input type="date" class="form-control" id="id_edit_closeDate" name="closeDate">
+            </div>
+          </div>
+          
+          <!-- Score and Attempts Row -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_edit_maxMarks" class="form-label">Max Marks</label>
+              <input type="number" class="form-control" id="id_edit_maxMarks" name="maxMarks">
+            </div>
+            <div class="col-md-6">
+              <label for="id_edit_noOfAttempts" class="form-label">Allowed Attempts</label>
+              <input type="number" class="form-control" id="id_edit_noOfAttempts" name="noOfAttempts">
+            </div>
+          </div>
+          
+          <!-- Number of Questions -->
+          <div class="mb-3">
+            <label for="id_edit_noOfQuestions" class="form-label">Number of Questions</label>
+            <input type="number" class="form-control" id="id_edit_noOfQuestions" name="noOfQuestions">
+          </div>
+          
+          <!-- Skill -->
+          <div class="mb-3">
+            <label for="id_edit_skill" class="form-label">Skill</label>
+            <select class="form-select" id="id_edit_skill" name="skill" required>
+              <option value="" selected disabled>Select a skill</option>
+              {% for skill in skills %}
+                <option value="{{ skill.id }}">{{ skill.skill }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Tags -->
+          <div class="mb-3">
+            <label for="id_edit_tags" class="form-label">Tags</label>
+            <select class="form-select" id="id_edit_tags" name="tags" multiple>
+              {% for tag in tags %}
+                <option value="{{ tag.id }}">{{ tag.tag }}</option>
+              {% endfor %}
+            </select>
+            <small class="form-text text-muted">Hold Ctrl  to select multiple tags</small>
+          </div>
+          
+          <!-- Is Practice Quiz -->
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="id_edit_is_practice" name="is_practice">
+            <label class="form-check-label" for="id_edit_is_practice">Is Practice Quiz?</label>
+          </div>
+          
+          <input type="hidden" id="edit_quiz_id" name="quiz_id">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Update Quiz</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Messages Section -->
+{% if messages %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+<script>
+    // Auto-dismiss alerts after 5 seconds
+    document.querySelectorAll('.alert').forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+</script>
+
+<!-- Filter Buttons -->
+<div class="d-flex justify-content-center mb-3">
+  <button id="practiceQuizBtn" class="btn btn-outline-primary me-2 active" onclick="filterQuizzes(true)">Practice Quiz</button>
+  <button id="nonPracticeQuizBtn" class="btn btn-outline-primary" onclick="filterQuizzes(false)"> Quiz</button>
+</div>
+
+<!-- Quiz Cards -->
+<div class="row" id="quizContainer">
+  {% for quiz in quizzes %}
+  <div class="col-md-4 mb-4 quiz-card" data-is-practice="{{ quiz.is_practice|lower }}">
+      <div class="card shadow-sm border-0 h-100">
+          <div class="card-body text-center">
+              <h5 class="card-title text-primary fw-bold mb-3">{{ quiz.name }}</h5>
+              
+              {% if user.is_staff or user.is_superuser %}
+              {% if quiz.isActive %}
+                  <p class="text-sm text-success"><strong>Quiz is open</strong></p>
+              {% else %}
+                  <p class="text-sm text-danger"><strong>Quiz is closed</strong></p>
+              {% endif %}
+              {% endif %}         
+              
+              <div class="quiz-details mb-4"> 
+                  <p><i class="fas fa-question-circle me-2"></i>Questions: {{ quiz.noOfQuestions }}</p> 
+                  <p><i class="fas fa-star me-2"></i>Max Score: {{ quiz.maxMarks }}</p>
+                  <p><i class="fas fa-redo me-2"></i>Attempts Allowed: 
+                    {% with quiz.attempt_set|filter_user_attempts:user as user_attempts %}
+                      {{ user_attempts|length }} / {{ quiz.noOfAttempts }}
+                    {% endwith %}
+                  </p>
+              </div>
+              
+              {% if quiz.openDate <= current_date and quiz.closeDate >= current_date%}
+              {% with quiz.attempt_set|filter_user_attempts:user as user_attempts %}
+              {% if user_attempts.count < quiz.noOfAttempts %}
+                  <div class="d-grid gap-2"> 
+                      <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary rounded-pill px-4 shadow-sm"> 
+                          <i class="fas fa-pen me-2"></i>Take Test 
+                      </a> 
+                  </div>
+              {% else %}
+                  <div class="attempt-history mt-3">
+                      <p class="text-sm text-success"><strong>You have successfully completed the quiz!</strong></p>
+                  </div>
+              {% endif %}
+          {% endwith %}
+              {% elif quiz.closeDate <= current_date %}
+                  <div class="text-sm text-danger">
+                      <i class="fas fa-calendar-alt me-2"></i>Quiz Closed
+                      <p class="small mb-0 mt-1">Closed on: {{ quiz.closeDate|date }}</p>
+                  </div>
+              {% else %}
+                  <div class="text-sm text-success">
+                      <i class="fas fa-calendar-alt me-2"></i>Upcoming Quiz
+                      <p class="small mb-0 mt-1">Opens on: {{ quiz.openDate|date }}</p>
+                  </div>
+              {% endif %}
+              
+              <!-- Replace the existing edit button in your quiz card with this -->
+              {% if user.is_staff %}
+              <button type="button" class="btn btn-outline-secondary rounded-pill px-4 mt-3 edit-quiz-btn" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#editQuizModal"
+                      data-quiz-id="{{ quiz.id }}"
+                      data-name="{{ quiz.name }}"
+                      data-open-date="{{ quiz.openDate|date:'Y-m-d' }}"
+                      data-close-date="{{ quiz.closeDate|date:'Y-m-d' }}"
+                      data-max-marks="{{ quiz.maxMarks }}"
+                      data-no-of-attempts="{{ quiz.noOfAttempts }}"
+                      data-no-of-questions="{{ quiz.noOfQuestions }}"
+                      data-skill="{{ quiz.skill.id }}"
+                      data-tags="{% for tag in quiz.tags.all %}{{ tag.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                      data-is-practice="{{ quiz.is_practice|lower }}">
+                <i class="fas fa-edit me-2"></i>Edit
+              </button>
+            {% endif %}
+          </div>
+      </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not quizzes %}
+<div class="row">
+    <div class="col-12 text-center">
+        <div class="alert alert-info">No tests are currently available.</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- JavaScript for Filtering and Edit Modal -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum dates for date fields
+    const today = new Date().toISOString().split("T")[0];
+    
+    // Set min date for create quiz form
+    if (document.getElementById("id_openDate")) {
+      document.getElementById("id_openDate").setAttribute("min", today);
+    }
+    if (document.getElementById("id_closeDate")) {
+      document.getElementById("id_closeDate").setAttribute("min", today);
+    }
+    
+    // Auto-dismiss alerts after 5 seconds
+    document.querySelectorAll('.alert').forEach(alert => {
+      setTimeout(() => {
+        // Check if bootstrap is available
+        if (typeof bootstrap !== 'undefined') {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        } else {
+          // Fallback for when bootstrap JS is not loaded
+          alert.style.display = 'none';
+        }
+      }, 5000);
+    });
+  
+    // Trigger Practice Quiz filter by default
+    filterQuizzes(true);
+  
+    // Add click event to each edit button
+    const editButtons = document.querySelectorAll('.edit-quiz-btn');
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Get data from button attributes
+        const quizId = this.getAttribute('data-quiz-id');
+        const name = this.getAttribute('data-name');
+        const openDate = this.getAttribute('data-open-date');
+        const closeDate = this.getAttribute('data-close-date');
+        const maxMarks = this.getAttribute('data-max-marks');
+        const noOfAttempts = this.getAttribute('data-no-of-attempts');
+        const noOfQuestions = this.getAttribute('data-no-of-questions');
+        const skillId = this.getAttribute('data-skill');
+        const tagsString = this.getAttribute('data-tags');
+        const isPractice = this.getAttribute('data-is-practice');
+        
+        // Set hidden field and form action
+        document.getElementById('edit_quiz_id').value = quizId;
+        document.getElementById('editQuizForm').action = `/crampchamp/update_quiz/${quizId}/`;
+        
+        // Populate form fields - using the correct IDs from the HTML
+        document.getElementById('id_edit_name').value = name;
+        document.getElementById('id_edit_openDate').value = openDate;
+        
+        // Handle optional fields
+        if (closeDate) document.getElementById('id_edit_closeDate').value = closeDate;
+        if (maxMarks) document.getElementById('id_edit_maxMarks').value = maxMarks;
+        if (noOfAttempts) document.getElementById('id_edit_noOfAttempts').value = noOfAttempts;
+        if (noOfQuestions) document.getElementById('id_edit_noOfQuestions').value = noOfQuestions;
+        
+        // Set skill dropdown
+        if (skillId) document.getElementById('id_edit_skill').value = skillId;
+        
+        // Set practice checkbox
+        document.getElementById('id_edit_is_practice').checked = (isPractice === 'true');
+        
+        // Handle multi-select tags
+        if (tagsString && tagsString.length > 0) {
+          const tagsSelect = document.getElementById('id_edit_tags');
+          const tagIds = tagsString.split(',');
+          
+          // Clear previous selections
+          Array.from(tagsSelect.options).forEach(option => {
+            option.selected = false;
+          });
+          
+          // Select the appropriate options
+          Array.from(tagsSelect.options).forEach(option => {
+            if (tagIds.includes(option.value)) {
+              option.selected = true;
+            }
+          });
+        }
+      });
+    });
+    
+    // Add event listener for the create quiz form's number of questions field
+    const noOfQuestionsField = document.getElementById('id_noOfQuestions');
+    if (noOfQuestionsField) {
+      noOfQuestionsField.addEventListener('change', function() {
+        checkQuestionAvailability(this.value);
+      });
+    }
+  });
+  
+  // Filter quizzes based on practice/non-practice status
+  function filterQuizzes(isPractice) {
+    const practiceBtn = document.getElementById('practiceQuizBtn');
+    const nonPracticeBtn = document.getElementById('nonPracticeQuizBtn');
+    
+    // Update button active states
+    if (isPractice) {
+      practiceBtn.classList.add('active');
+      nonPracticeBtn.classList.remove('active');
+    } else {
+      practiceBtn.classList.remove('active');
+      nonPracticeBtn.classList.add('active');
+    }
+  
+    // Filter cards
+    const quizCards = document.querySelectorAll('.quiz-card');
+    quizCards.forEach(card => {
+      const cardIsPractice = card.getAttribute('data-is-practice') === 'true';
+      card.style.display = (cardIsPractice === isPractice) ? 'block' : 'none';
+    });
+    
+    // Show message if no quizzes are visible
+    const visibleQuizzes = document.querySelectorAll('.quiz-card[style="display: block;"]');
+    const container = document.getElementById('quizContainer');
+    const noQuizzesMessage = document.getElementById('noQuizzesMessage');
+    
+    if (visibleQuizzes.length === 0) {
+      // If the message doesn't exist, create it
+      if (!noQuizzesMessage) {
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'noQuizzesMessage';
+        messageDiv.className = 'col-12 text-center';
+        messageDiv.innerHTML = `<div class="alert alert-info">No ${isPractice ? 'practice' : 'non-practice'} quizzes are currently available.</div>`;
+        container.appendChild(messageDiv);
+      } else {
+        // Update existing message
+        noQuizzesMessage.innerHTML = `<div class="alert alert-info">No ${isPractice ? 'practice' : 'non-practice'} quizzes are currently available.</div>`;
+        noQuizzesMessage.style.display = 'block';
+      }
+    } else if (noQuizzesMessage) {
+      // Hide the message if quizzes are visible
+      noQuizzesMessage.style.display = 'none';
+    }
+  }
+  
+
+  
+  
+  // Save form data to cookies when inputs change
+  function saveFormDataToCookies() {
+    const formData = {};
+    const form = document.getElementById('createQuizForm');
+    
+    // Get all input elements
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    // Save each input value
+    inputs.forEach(input => {
+      if (input.type === 'checkbox') {
+        formData[input.name] = input.checked;
+      } else if (input.type === 'select-multiple') {
+        const selectedOptions = Array.from(input.selectedOptions).map(option => option.value);
+        formData[input.name] = selectedOptions;
+      } else {
+        formData[input.name] = input.value;
+      }
+    });
+    
+    // Save to a cookie that expires in 1 day
+    document.cookie = `quiz_form_data=${JSON.stringify(formData)};path=/;max-age=86400`;
+  }
+  
+  function clearSessionData() {
+            fetch("{% url 'clear_session' %}", {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest", // to indicate an AJAX request
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    console.log("Session variables cleared successfully.");
+                }
+            })
+            .catch(error => {
+                console.error("Error clearing session data:", error);
+            });
+        }
+    
+  // Load form data from cookies
+  function loadFormDataFromCookies() {
+    const cookies = document.cookie.split(';');
+    let formDataCookie = null;
+    
+    // Find the form data cookie
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.startsWith('quiz_form_data=')) {
+        formDataCookie = cookie.substring('quiz_form_data='.length);
+        break;
+      }
+    }
+    
+    if (!formDataCookie) return;
+    
+    try {
+      const formData = JSON.parse(formDataCookie);
+      // const form = document.getElementById('createQuizForm');
+      
+      // Populate form fields
+      Object.keys(formData).forEach(name => {
+        const input = form.querySelector(`[name="${name}"]`);
+        if (!input) return;
+        
+        if (input.type === 'checkbox') {
+          input.checked = formData[name];
+        } else if (input.type === 'select-multiple') {
+          const values = formData[name];
+          Array.from(input.options).forEach(option => {
+            option.selected = values.includes(option.value);
+          });
+        } else {
+          input.value = formData[name];
+        }
+      });
+    } catch (e) {
+      console.error('Error loading form data from cookie:', e);
+    }
+  }
+  
+  // Initialize cookie saving for the create quiz form
+  document.addEventListener('DOMContentLoaded', function() {
+    const createForm = document.getElementById('createQuizForm');
+    
+    if (createForm) {
+      // Load saved data
+      loadFormDataFromCookies();
+      
+      // Save data when inputs change
+      const inputs = createForm.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('change', saveFormDataToCookies);
+      });
+
+      createForm.addEventListener('submit', function() {
+        // console.log("Change in the form...........")
+        // console.log(all_selected_questions);
+        // console.log(noOfQuestions);
+        if (all_selected_questions < noOfQuestions){
+          alert("Not enough questions available in database, Enter less than "+noOfQuestions+" questions");
+          return;
+        }
+        document.cookie = 'quiz_form_data=;path=/;max-age=0';
+      });
+    }
+  });
+</script>
+
+{% endblock %}

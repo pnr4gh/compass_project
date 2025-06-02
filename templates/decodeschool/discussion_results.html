@@ -1,0 +1,58 @@
+{% extends 'decodeschool/base.html' %}
+{% block title %}Discussion Details{% endblock %}
+{% load custom_tags %}
+{% load crispy_forms_tags %}
+{% block course %}
+active
+{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'course_list' %}">{{ course.course_title }}</a></li> <!-- Update this URL based on your route for courses -->
+        
+        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Discussion Details</li>
+    </ol>
+    <h2 class="font-weight-bolder mb-0">{{ discussion.discussion_name }} Details</h2>
+{% endblock %}
+
+{% block tool %}
+<a href="{% url 'course_detail' course.id %}?tab=discussion" class="btn btn-secondary">Back to Discussion</a>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    
+    <hr>
+
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Problem</th>
+                <th>Integrity Score</th>
+                <th>Communication Score</th>
+                <th>Comments</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detail in discussion_details %}
+            <tr>
+                <td>{{ detail.user.username }}</td>
+                <td>{{ detail.problem.problem_title }}</td>
+                <td>{{ detail.integrity_score }}</td>
+                <td>{{ detail.communication_score }}</td>
+                <td>{{ detail.comments }}</td>
+                <td>{{ detail.date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No discussion details available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

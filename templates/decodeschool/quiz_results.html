@@ -1,0 +1,54 @@
+{% extends "decodeschool/base.html" %}
+{% load static %}
+{% block aura %}
+active
+{%endblock%}
+{% block breadcrumb %}
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'aura_page' %}">Aura</a></li>
+        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Quiz Results</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 p-4 text-center">
+                <h3 class="fw-bold text-primary">Quiz Completed 🎉</h3>
+                <p><i class="fas fa-redo me-2"></i>Attempts: {{ quiz.attempt_set.count }} / {{ quiz.noOfAttempts }}</p> 
+                <p class="text-muted">Your Score: <strong class="text-success">{{ score }}%</strong></p>
+                <p>Correct Answers: <strong>{{ correct_answers }}</strong> / {{ total_questions }}</p>
+
+                <!-- Progress Bar -->
+                <div class="progress mt-3 mb-4">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ score }}%;" aria-valuenow="{{ score }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <!-- Result Summary -->
+                <div class="alert {% if score >= 50 %}alert-success{% else %}alert-danger{% endif %}">
+                    {% if score >= 50 %}
+                        🎉 Congratulations! You passed the quiz.
+                    {% else %}
+                        ❌  You need more practice.
+                    {% endif %}
+                </div>
+
+                <!-- PDF Download Button -->
+                 
+                
+                <div class="mt-4">
+                    <a href="{% url 'aura_page' %}" class="btn btn-primary">Back to Aura</a>
+                    {% if quiz.attempt_set.count < quiz.noOfAttempts %}
+                    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-warning">Try again</a>
+                {% endif %}
+
+                    <a href="{% url 'download_quiz_pdf' attempt_id=attempt.id %}"  class="btn btn-success">Download  Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'decodeschool/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block home %}active{% endblock %}
+
+{% block breadcrumb %}
+{% block contest_stats %}
+active
+{%endblock%}
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Dashboard</li>
+    </ol>
+    <h6 class="font-weight-bolder mb-0">Contest Statistics</h6>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card m-4">
+                <div class="card-header pb-0">
+                    <h6>Contest Statistics</h6>
+                </div> 
+                {% if user.is_superuser %}
+                    <div class="card-body px-3">
+                        <form method="GET" action="">
+                            <div class="row m-3">
+                                <div class="col-md-4">
+                                    <label for="user">Select User:</label>
+                                    <select name="user" id="user" class="form-control">
+                                        <option value="">All Users</option>
+                                        {% for user in users %}
+                                            <option value="{{ user.id }}" {% if selected_user == user.id %}selected{% endif %}>
+                                                {{ user.username }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="contest">Select Contest:</label>
+                                    <select name="contest" id="contest" class="form-control">
+                                        <option value="">All Contests</option>
+                                        {% for contest in contests %}
+                                            <option value="{{ contest.id }}" {% if selected_contest == contest.id %}selected{% endif %}>
+                                                {{ contest.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mt-4">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table class="table align-items-center">
+                                <thead>
+                                    <tr>
+                                        <th>Contest Name</th>
+                                        <th>User</th>
+                                        <th>Problem Type</th>
+                                        <th>Problems Attempted</th>
+                                        <th>Problems Solved</th>
+                                        <th>Integrity Index</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contest_name, stats in grouped_stats.items %}
+                                        {% if stats %}
+                                            <tr>
+                                                <td rowspan="{{ stats|length }}">{{ contest_name }}</td>
+                                                {% for stat in stats %}
+                                                    {% if not forloop.first %}<tr>{% endif %}
+                                                        <td>{{ stat.user.username }}</td>
+                                                        <td>{{ stat.problem_type.name }}</td>
+                                                        <td>{{ stat.attempted_count }}</td>
+                                                        <td>{{ stat.solved_count }}</td>
+                                                        <td>{{ stat.integrity_index|floatformat:2 }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                        {% endif %}
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-3">No contest data available.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                {% else %}
+                    <div class="card-body px-3">
+                        <div class="table-responsive">
+                            <table class="table align-items-center">
+                                <thead>
+                                    <tr>
+                                        <th>Contest Name</th>
+                                        <th>Problem Type</th>
+                                        <th>Problems Attempted</th>
+                                        <th>Problems Solved</th>
+                                        <th>Integrity Index</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contest_name, stats in grouped_stats.items %}
+                                        {% if stats %}
+                                            <tr>
+                                                <td rowspan="{{ stats|length }}">{{ contest_name }}</td>
+                                                {% for stat in stats %}
+                                                    {% if not forloop.first %}<tr>{% endif %}
+                                                        <td>{{ stat.problem_type.name }}</td>
+                                                        <td>{{ stat.attempted_count }}</td>
+                                                        <td>{{ stat.solved_count }}</td>
+                                                        <td>{{ stat.integrity_index|floatformat:2 }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                        {% endif %}
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-3">No contest data available.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

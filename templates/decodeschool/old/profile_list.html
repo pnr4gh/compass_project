@@ -1,0 +1,12 @@
+{% for profile in profiles %}
+	<tr>
+		<th scope="row">{{profile.user.first_name}} {{profile.user.last_name}}</th>
+		<td>{{profile.institute}}</td>
+		<td>{{profile.get_leetcode_username}}</td>
+		<td>{{profile.get_count}}</td>
+		<td>{{profile.get_easy_count}}</td>
+		<td>{{profile.get_medium_count}}</td>
+		<td>{{profile.get_hard_count}}</td>
+		<td>{{profile.get_leetcode_last_update}}</td>
+	</tr>
+{% endfor %}

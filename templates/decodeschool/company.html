@@ -1,0 +1,133 @@
+{% extends "decodeschool/base.html" %}
+{% load static %}
+{% block companies %}active{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-md-11 ms-0 px-2">
+      <!-- Add Company Section -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary bg-opacity-10">
+          <h5 class="card-title mb-0 py-2 text-white">Register New Company</h5>
+        </div>
+        <div class="card-body py-4">
+          <form id="addCompanyForm" method="POST" action="{% url 'add_company' %}" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+              <label for="companyName" class="form-label">Company Name</label>
+              <input type="text" class="form-control" id="companyName" name="company_name" placeholder="Enter company name" required>
+            </div>
+            <div class="col-md-4">
+              <label for="companyType" class="form-label">Company Type</label>
+              <select class="form-select" id="companyType" name="company_type" required>
+                <option value="">Select company type</option>
+                <option value="SERVICE">Service Based</option>
+                <option value="PRODUCT">Product Based</option>
+              </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end" style="padding-top: 30px;">
+              <button type="submit" class="btn btn-primary w-100 ">Add Company</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Companies Search and List Section -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary bg-opacity-10">
+          <h5 class="card-title mb-0 py-2 text-white">Explore companies</h5>
+        </div>
+        
+        <div class="card-body">
+          <!-- Search Bar with Filter -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <form id="searchForm" action="{% url 'company_list' %}" method="GET" class="row g-3">
+                <div class="col-md-5">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="search" id="searchInput" value="{{ search_query }}" placeholder="Search companies...">
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <select class="form-select" name="company_type" id="searchCompanyType">
+                    <option value="">All Companies</option>
+                    <option value="SERVICE" {% if company_type == "SERVICE" %}selected{% endif %}>Service</option>
+                    <option value="PRODUCT" {% if company_type == "PRODUCT" %}selected{% endif %}>Product</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <select class="form-select" name="skill" id="searchSkill">
+                    <option value="">All Skills</option>
+                    {% for skill_obj in skills %}
+                      <option value="{{ skill_obj.skill }}" {% if skill == skill_obj.skill %}selected{% endif %}>{{ skill_obj.skill }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <select class="form-select" name="salary_band" id="searchSalaryBand">
+                    <option value="">All Salary Bands</option>
+                    {% for salary_band_obj in salary_bands %}
+                      <option value="{{ salary_band_obj.salary_range }}" {% if salary_band == salary_band_obj.salary_range %}selected{% endif %}>{{ salary_band_obj.salary_range }} LPA</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <button class="btn btn-outline-primary w-100" type="submit">Search</button>
+                </div>
+                <div class="col-md-2">
+                  <a href="{% url 'company_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Companies List with improved styling -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="company-list d-flex flex-wrap gap-3">
+                {% for company in companies %}
+                <a href="{% url 'company_job_roles' company.id %}" 
+                   class="btn btn-outline-primary company-button py-2 px-3">
+                  {% if company.company_type == "SERVICE" %}
+                    <i class="bi bi-gear-fill me-1"></i>
+                  {% else %}
+                    <i class="bi bi-box-seam me-1"></i>
+                  {% endif %}
+                  {{ company.name }}
+                </a>
+                {% empty %}
+                <div class="text-center py-5 w-100">
+                  <i class="bi bi-building text-muted" style="font-size: 2rem;"></i>
+                  <p class="text-muted mt-3">No companies found</p>
+                  <p class="text-muted small">Try adjusting your search criteria or add a new company above</p>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Alert -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-check-circle me-2"></i> Company added successfully!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+ 
+      
+</script>
+{% endblock %}

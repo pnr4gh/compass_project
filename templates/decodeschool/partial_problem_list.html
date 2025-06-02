@@ -1,0 +1,29 @@
+{% load custom_tags %}
+{% for problem in problems %}
+<div class="col-md-12 mb-lg-0  mb-2">
+              <div class="card  mt-2">
+                <div class="card-header rounded-3 p-2">
+                  <div class="row">
+                    <div class="col-6 d-flex align-items-center">
+                      <h6 class="mb-0">{{ problem.problem_title }}</h6>
+                    </div>
+                    <div class="col-6 text-end">
+                      {% if problem in assigned_problems %}
+                    		<button class="btn btn-sm btn-primary remove-from-assignment-btn" data-problem-id="{{ problem.id }}" data-assignment-id="{{ assignment.id }}">
+                        	Remove from Assignment
+                    		</button>
+                		{% else %}
+                    		<button class="btn btn-sm btn-primary add-to-assignment-btn" data-problem-id="{{ problem.id }}" data-assignment-id="{{ assignment.id }}">
+                        	Add to Assignment
+                    		</button>
+                		{% endif %}
+                    </div>
+                  </div>
+                  <div class="row">
+                    <small class="mb-0">{{ problem.platform.name }}&nbsp;&nbsp;| &nbsp;&nbsp;{{ problem.complexity.level }}&nbsp;&nbsp;|&nbsp;&nbsp;{% for tag in problem.problemtags_set.all %}{{ tag.topictags.tag }}{% if not forloop.last %}, {% endif %}{% endfor %}&nbsp;&nbsp;|&nbsp;&nbsp;{{assignment.course|problem_stat:problem}} Solved</small>
+                  </div>
+                </div>
+               
+              </div>
+            </div>
+{% endfor %}

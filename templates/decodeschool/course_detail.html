@@ -1,0 +1,473 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %} 
+
+{% block course %}
+active
+{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Courses</li>
+        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{course.course_title}}</li>
+    </ol>
+    <h6 class="font-weight-bolder mb-0">{{course.course_title}}</h6>
+{% endblock %}
+
+
+{% block tool %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignmentModal" id="addAssignmentBtn">Add Assignment</button>
+{% endblock %}
+
+{% block content %}
+
+
+    <div class="card mb-2">
+
+        <div class="card-body">
+            <h5 class="card-title">{{ course.course_title }}</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <h6 class="text-dark text-sm font-weight-bold mb-0">Students Enrolled: &nbsp;<span class="text-muted"> {{ course.get_enrolled_count }} </span></h6>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-dark text-sm font-weight-bold mb-0">Number of Assignments: &nbsp;<span class="text-muted">{{ course.get_assignment_count }} </span></h6>
+              
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-dark text-sm font-weight-bold mb-0">Total Problems in Assignments: &nbsp;<span class="text-muted">{{ course.get_problem_count }} </span></h6>
+                    
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-dark text-sm font-weight-bold mb-0">Start Date: &nbsp;<span class="text-muted">{{ course.start_date }} </span></h6>
+                   
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-dark text-sm font-weight-bold mb-0">End Date:  &nbsp;<span class="text-muted">{{ course.end_date }} </span></h6>
+                </div>
+            </div>
+                
+           
+            
+        </div>
+        
+    </div>
+    
+
+    <ul class="nav nav-tabs" id="courseTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="assignments-tab" data-bs-toggle="tab" href="#assignments" 
+               role="tab" aria-controls="assignments">Assignments</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="discussion-tab" data-bs-toggle="tab" href="#discussion" 
+               role="tab" aria-controls="discussion">Discussion</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="leaderboard-tab" data-bs-toggle="tab" href="#leaderboard" 
+               role="tab" aria-controls="leaderboard">Leaderboard</a>
+        </li>
+    </ul>
+    
+
+    <div class="tab-content" id="courseTabContent">
+        <!-- Assignments Tab -->
+        <div class="tab-pane fade" id="assignments" role="tabpanel" aria-labelledby="assignments-tab">
+            <div class="accordion" id="accordionExample">
+                {% for assignment in assignments %}
+                  <div class="accordion-item bg-white">
+                    <h2 class="accordion-header border-bottom" id="heading{{ assignment.id }}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ assignment.id }}" aria-expanded="false" aria-controls="collapse{{ assignment.id }}">
+                       
+                            <div class="col-md-4">
+                                <span class="bg-primary rounded-1 m-1 p-1 text-white text-sm">{{ assignment.name }}</span> 
+                            </div>
+                            <div class="col-md-4">
+                                <span class="bg-gradient-success rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.problem_stats.0 }} Problems 
+                                </span>
+                                <span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.problem_stats.1 }} E
+                                </span>
+                                <span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.problem_stats.2 }} M
+                                </span>
+                                <span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.problem_stats.3 }} H
+                                </span>
+                            </div>
+                            <div class="col-md-4">
+                               
+                               
+                                <span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.users_stats.1 }} &#128512;
+                                </span>
+                                <span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.users_stats.2 }} &#128519;
+                                </span>
+                                <span class="bg-gradient-secondary rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.users_stats.3 }} &#128542;
+                                </span>
+                                &nbsp; out of
+                                <span class="bg-gradient-success rounded-1 m-1 p-1 text-white text-sm">
+                                    {{ assignment.users_stats.0 }} Users 
+                                </span>
+                            </div>   
+                                      
+                      </button>
+                    </h2> 
+                    <div id="collapse{{ assignment.id }}" class="accordion-collapse collapse m-1" aria-labelledby="heading{{ assignment.id }}" data-bs-parent="#accordionExample">
+                      <div class="accordion-body">
+                        <a href="{% url 'student_progress' assignment.id %}" class="btn btn-secondary" target="_blank">Assignment Report</a>
+                        <button class="btn btn-secondary edit-assignment-btn" data-id="{{ assignment.id }}" data-name="{{ assignment.name }}" data-start="{{ assignment.start_date }}" data-end="{{ assignment.end_date }}">Edit Assignment</button>
+                        <a href="{% url 'problem_list' assignment.id %}" class="btn btn-secondary">Add Problems</a>
+              
+                        <div class="table-responsive p-0">
+                            <table class="table align-items-center mb-0">
+                          <thead>
+                            <tr>
+                              <th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7" >Problem Name</th>
+                              <th class="text-uppercase text-center text-secondary text-xxs font-weight-bolder opacity-7">Difficulty</th>
+                              <th class="text-uppercase text-center text-secondary text-xxs font-weight-bolder opacity-7">Platform</th>
+                              <th class="text-uppercase text-center text-secondary text-xxs font-weight-bolder opacity-7">Tags</th>
+                              <th class="text-uppercase text-center text-secondary text-xxs font-weight-bolder opacity-7">Solved/Total Students</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for problem in assignment.all_problems %}
+                              <tr>
+                                <td class="text-center text-sm">{{ problem.problem.problem_title }}</td>
+                                <td class="text-center text-sm">{{ problem.problem.complexity.level }}</td>
+                                <td class="text-center text-sm">{{ problem.problem.platform.name }}</td>
+                                <td class="text-center text-sm">
+                                  {% for tag in problem.problem.problemtags_set.all %}
+                                    {{ tag.topictags.tag }}{% if not forloop.last %}, {% endif %}
+                                  {% endfor %}
+                                </td>
+                                <td class="text-center text-sm">{{ problem.get_solved_count.1 }} / {{ problem.get_solved_count.0 }}</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                            </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+            </div>
+              
+        </div>
+
+        <div class="tab-pane fade" id="discussion" role="tabpanel" aria-labelledby="discussion-tab">
+            {% csrf_token %}
+            <button class="btn btn-primary mb-3" id="addDiscussionBtn" data-course-id="{{ course.id }}">
+                Add Discussion
+            </button>
+        
+            <div id="discussionContainer" class="mt-3">
+                {% for discussion in discussions %}
+                    <a href="{% url 'course_discussion' course.id discussion.id %}" 
+                       class="btn btn-secondary m-1 discussion-btn"
+                       data-id="{{ discussion.id }}">
+                        {{ discussion.discussion_name }}
+                    </a>
+                {% empty %}
+                    <p>No discussions yet. Click "Add Discussion" to create one.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+      
+        <!-- Leaderboard Tab -->
+        <div class="tab-pane fade" id="leaderboard" role="tabpanel" aria-labelledby="leaderboard-tab">
+            
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="instituteFilter">Filter by Institute:</label>
+                        <select id="instituteFilter" class="form-control">
+                            <option value="all">All Institutes</option>
+                            {% for institute in institutes %}
+                            <option value="{{ institute.id }}">{{ institute.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                </div>
+        
+                <div id="leaderboardContent" class="mt-3">
+                    {% include 'decodeschool/leaderboard_content.html' %}
+                </div>
+            
+        </div>
+      </div>
+
+
+    
+    <!-- Modal -->
+<div class="modal fade" id="assignmentModal" tabindex="-1" aria-labelledby="assignmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignmentModalLabel">Add/Edit Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignmentForm">
+                    <input type="hidden" name="assignment_id" id="assignmentId">
+                    <div class="mb-3">
+                        <label for="assignmentName" class="form-label">Assignment Name</label>
+                        <input type="text" class="form-control" id="assignmentName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="start_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="end_date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to create a new discussion?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmAddDiscussionBtn">Yes, Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+
+
+
+        <!-- Bootstrap JS and Dependencies -->
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+       
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+        <script>
+            document.getElementById('assignmentForm').onsubmit = function(event) {
+            event.preventDefault();
+            if($("#startDate").val() <= $("#endDate").val() )
+            {
+                    const form = event.target;
+                    const url = form.querySelector('#assignmentId').value ? 
+                    `/assignment/${form.querySelector('#assignmentId').value}/edit/` : 
+                    `/course/{{ course.id }}/add_assignment/`;
+
+                    fetch(url, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + JSON.stringify(data.errors || data.error));
+                    }
+                });
+            }
+            else
+            {
+                alert("Start End Cannot be greater than End Date");
+            }
+    };
+
+        document.querySelectorAll('.edit-assignment-btn').forEach(button => {
+        button.onclick = function() {
+            
+            document.getElementById('assignmentId').value = button.dataset.id;
+            document.getElementById('assignmentName').value = button.dataset.name;
+            const startDate = new Date(button.dataset.start).toLocaleDateString('en-CA');
+            const endDate = new Date(button.dataset.end).toLocaleDateString('en-CA');
+        
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+            new bootstrap.Modal(document.getElementById('assignmentModal')).show();
+        };
+    });
+
+    document.getElementById('assignmentModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('assignmentForm').reset(); // Reset the form fields
+    document.getElementById('assignmentId').value = ''; // Clear the hidden assignmentId field
+});
+</script>
+
+
+
+
+    <script>
+        // JavaScript to handle AJAX loading of leaderboard data
+        function loadLeaderboard() {
+            var instituteId = $('#instituteFilter').val();
+            var assignmentId = $('#assignmentFilter').val();
+            
+            $.ajax({
+                url: "{% url 'load_leaderboard' course.id %}",
+                data: {
+                    institute: instituteId,
+                    assignment: assignmentId
+                },
+                success: function(data) {
+                    
+                    $('#leaderboardContent').html(data);
+                }
+            });
+        }
+    
+        $('#instituteFilter, #assignmentFilter').change(loadLeaderboard);
+        $(document).ready(loadLeaderboard);
+    </script>
+
+    
+    
+    
+
+
+
+
+
+
+       
+
+
+
+
+<script>
+    const courseId = "{{ course.id }}";  // Get course ID from template context
+    const discussionsUrl = `/discussions/${courseId}/`; // New API endpoint
+
+    // Function to fetch discussions (GET)
+    function fetchDiscussions() {
+        $.ajax({
+            type: "GET",
+            url: discussionsUrl,
+            success: function(data) {
+                if (data.discussions.length > 0) {
+                    const container = $("#discussionContainer");
+                    container.empty(); // Clear existing content
+                    
+                    data.discussions.forEach(discussion => {
+                        const discussionLink = $('<a>', {
+                            href: `/course/${courseId}/course_discussion/${discussion.id}/`,
+                            class: 'btn btn-secondary m-1 discussion-btn',
+                            text: discussion.discussion_name
+                        });
+                        container.append(discussionLink);
+                    });
+                } else {
+                    $("#discussionContainer").html('<p>No discussions yet. Click "Add Discussion" to create one.</p>');
+                }
+            },
+            error: function() {
+                console.error("Failed to load discussions");
+            }
+        });
+    }
+
+    // Function to create a discussion (POST)
+    function createDiscussion() {
+        $.ajax({
+            type: "POST",
+            url: discussionsUrl,
+            data: {
+                csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(`Discussion created: ${response.discussion_name}`);
+                    fetchDiscussions(); // Refresh discussion list
+                } else {
+                    alert(`Error: ${response.error}`);
+                }
+            },
+            error: function() {
+                alert("An error occurred while adding the discussion.");
+            }
+        });
+    }
+
+    // Event listeners
+    $(document).ready(function() {
+        fetchDiscussions();  // Load discussions when page loads
+
+        $("#addDiscussionBtn").on("click", function() {
+            if (confirm("Do you really want to create a new discussion?")) {
+                createDiscussion();
+            }
+        });
+    });
+
+
+
+// Initialize everything when document is ready
+$(document).ready(function() {
+    const courseId = document.getElementById("addDiscussionBtn").getAttribute("data-course-id");
+    refreshDiscussionList(courseId);
+    initializeDiscussionHandlers(courseId);
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Get the tab parameter from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get("tab") || "assignments"; // Default to assignments if no parameter
+
+    // Select all tabs
+    const tabs = document.querySelectorAll("#courseTabs .nav-link");
+    const tabContents = document.querySelectorAll(".tab-pane");
+
+    // Remove 'active' class from all tabs and tab content
+    tabs.forEach(tab => tab.classList.remove("active"));
+    tabContents.forEach(content => content.classList.remove("show", "active"));
+
+    // Find the correct tab and content to activate
+    const selectedTab = document.querySelector(`#${activeTab}-tab`);
+    const selectedContent = document.querySelector(`#${activeTab}`);
+
+    if (selectedTab && selectedContent) {
+        selectedTab.classList.add("active");
+        selectedContent.classList.add("show", "active");
+    } else {
+        // Default to Assignments tab in case of an issue
+        document.getElementById("assignments-tab").classList.add("active");
+        document.getElementById("assignments").classList.add("show", "active");
+    }
+});
+
+
+
+
+
+        </script>
+    
+    
+    
+    
+    
+    
+    
+{% endblock %}

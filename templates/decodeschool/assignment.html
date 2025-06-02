@@ -1,0 +1,48 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %} 
+{% block tool %}
+    <a class="btn btn-secondary" href="{% url 'course_detail' assignment.course.id %}">Back to Course</a>
+{% endblock %}
+
+{% block content %}
+<div class="table-responsive p-0">
+    <table class="table align-items-center mb-0">
+    <thead class="table-active">
+    <tr>
+        <th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7" scope="col">Name</th>
+        <th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7" scope="col">Institution</th>
+        <th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7" scope="col">UserName</th>
+        <th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7" scope="col">Solved ({{assignment_problems|length}})</th>
+        {% for assignment_problem in assignment_problems %}
+            <th class="text-uppercase text-center text-xxs font-weight-bolder opacity-7" scope="col">{{assignment_problem.problem.problem_title}}</th>
+        {% endfor %}
+        <th scope="col">Last Update</th>
+    </tr>
+</thead>
+<tbody>
+    {% for profile in profiles %}
+    <tr>
+        <td class="text-center">{{profile.user.first_name}} {{profile.user.last_name}} </td>
+        <td class="text-center">{{profile.institute.name}}</td>
+        <td class="text-center">{{profile.user.username}}</td>
+        <td class="text-center">{{profile.user|no_of_problems:assignment_id}}</td>
+        {% for assignment_problem in assignment_problems %}
+        <td class="text-center">
+            
+            {% if profile.user|is_solved:assignment_problem.problem.id %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        
+        
+        
+        </td>
+        {% endfor %}
+        <td class="text-center">{{profile.get_leetcode_last_update}}</td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
+{% endblock %}

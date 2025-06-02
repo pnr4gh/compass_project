@@ -1,0 +1,72 @@
+{% for chart in chart_data %}
+<div class="col-lg-6 col-md-6 col-12 mt-2 ">
+    <div class="card pb-3 text-white">
+        <span class="mask bg-primary opacity-10 border-radius-lg"></span>
+        <div class="card-body position-relative" style="margin-top: 10px; padding-top: 10px;">
+           
+            	<div class="chart-item">
+        			<h6 style="margin-bottom: 5px;">{{ chart.platform }}</h6>
+        			<div class="chart-container">
+            		    <canvas id="chart-{{ forloop.counter }}"></canvas>
+        			</div>
+        			{{chart.object.get_total_count}} Problems
+        			<a class="btn btn-white mt-2" href="{% url 'get_portal_problems' chart.platform %}">Get Updates</a>
+    			</div>
+            
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for chart in chart_data %}
+        var complexityData{{ forloop.counter }} = {{ chart.data|safe }};
+        var labels{{ forloop.counter }} = complexityData{{ forloop.counter }}.map(function(item) { return item.complexity__level; });
+        var counts{{ forloop.counter }} = complexityData{{ forloop.counter }}.map(function(item) { return item.count; });
+       
+        var ctx{{ forloop.counter }} = document.getElementById('chart-{{ forloop.counter }}').getContext('2d');
+        new Chart(ctx{{ forloop.counter }}, {
+            type: 'pie',
+            data: {
+                labels: labels{{ forloop.counter }},
+                datasets: [{
+                    label: 'Problem Complexity Distribution',
+                    data: counts{{ forloop.counter }},
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Disable maintaining the aspect ratio
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#FFFFFF', // Set the font color of the legend (e.g., blue)
+                            font: {
+                                size: 10 // Optional: Adjust font size
+                            }
+                        }
+                    },
+                    datalabels: {
+                        color: '#000000',
+                        formatter: (value) => value,
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 0, // Remove padding at the top of the chart
+                        bottom: 0 // Remove padding at the bottom of the chart
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+        {% endfor %}
+    });
+</script> 
+
+

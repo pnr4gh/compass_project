@@ -1,0 +1,230 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %} 
+{%load crispy_forms_tags %} 
+{% block head %}
+   
+    
+    <!-- Bootstrap CSS -->
+   
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+	<style>
+        #charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .chart-item {
+            flex: 1 1 calc(25% - 20px); /* Adjust percentage for number of columns */
+            margin: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            height: 350px; /* Fixed height for the chart container */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .chart-item h2 {
+            margin: 0; /* Remove margin completely */
+            padding-bottom: 5px; /* Reduce padding to make the label closer to the chart */
+            font-size: 1.1em;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 100%; /* Make sure the container takes all available space */
+        }
+        .chart-item canvas {
+            width: 100% !important;
+            height: 100% !important; /* Make sure the canvas fills the container */
+        }
+    </style>
+   
+
+{% endblock %}
+
+{% block home %}
+active
+{% endblock %}
+{% block breadcrumb %}
+	<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+		<li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+		<li class="breadcrumb-item text-sm text-dark active" aria-current="page">Dashboard</li>
+  	</ol>
+  	<h6 class="font-weight-bolder mb-0">Dashboard</h6>
+{% endblock %}
+
+
+{% block content %}
+ <!-- Bootstrap JS and Dependencies -->
+ <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+ <!-- jQuery -->
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ <div class="container p-2">
+
+	<div class="row p-1">
+		<h6>Hi {{user.username}}</h6>
+	</div>
+	
+
+	<div class="row">
+		<div class="col-lg-9 col-12">
+			
+			<div class="row">
+				{% include "decodeschool/admin_portal_connect.html" %}
+								
+			</div>
+			
+			
+			
+			
+		</div>
+		<div class="col-sm-3">
+			{% include "decodeschool/admin_side_bar.html" %}
+		</div>
+	</div>
+
+	<div class="row mt-2">
+		<div class="col-12">
+			{% include "decodeschool/admin_leaderboard.html" %}
+		</div>
+	</div>
+	
+</div>
+	<script>
+		$(document).ready(function(){
+			var url;
+			
+			$("#uploadform").submit(function(e){
+			
+			e.preventDefault();
+			
+			var url = $(this).attr('data_url');
+			$.ajax({
+				url: url,
+				type: "POST",
+				data: new FormData(this),
+				dataType: 'json',
+				contentType: false,
+				cache: false,
+				processData:false,
+				success: function (data) {
+				
+						alert(data.count + " users registered, following users have issues:" + data.missed)
+				}
+				});
+			}); 
+			
+			$(".update_profile").click(function(e){
+				e.preventDefault();
+				
+				url = "update_solved/" + $(this).attr('url') + "/" + $(this).attr('platform'); 
+		
+				if($(this).attr('platform') != "Leet Code")
+				{
+					$.ajax(
+					{
+						type:"POST",
+						url:url,
+						
+						success: function( data ) 
+						{
+							alert(data.message)
+							if(data.status=="ok")
+							{
+								location.reload(true);
+							}
+						}
+					})
+		
+				}
+				else
+				{
+					$("#myModal").modal("show");
+				}
+				
+		
+			
+			});
+		
+			function updateLeaderboard() {
+				var department = $('#department').val();
+				var batch = $('#batch').val();
+				var institute = $('#institute').val();
+				var course = $('#course').val();
+				$.ajax({
+					url: "{% url 'myadmin' %}",
+					data: {
+						department: department,
+						batch: batch,
+						institute: institute,
+						course: course
+					},
+					success: function(data) {
+						var rows = '';
+						$.each(data, function(index, item) {
+							rows += '<tr>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + (index + 1) + '</p> </td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.user__username + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.user__first_name + ' ' + item.user__last_name + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.department__short_name + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.batch__start_year + ' - ' + item.batch__end_year + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.institute__name + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.total_score + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.total_solved + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.integrity_index + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.easy_solved + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.medium_solved + '</p></td>';
+							rows += '<td> <p class="text-xs text-center font-weight-bold mb-0">' + item.hard_solved + '</p></td>';
+							
+							
+
+							rows += '</tr>';
+						});
+						$('#leaderboard-body').html(rows);
+					}
+				});
+			}
+		
+			$('select').change(function() {
+				updateLeaderboard();
+			});
+			
+			$("#btn-update").click(function(e){
+				e.preventDefault();
+				
+				var lc_csrf = $("#lc_csrf").val();
+				var lc_session =  $("#lc_session").val();
+			
+				$.ajax(
+				{
+					type:"POST",
+					url:url,
+					data:{
+						lc_csrf: lc_csrf,
+						lc_session:lc_session
+					},
+					success: function( data ) 
+					{
+						alert(data.message)
+						if(data.status=="ok")
+						{
+							$("#myModal").modal("hide");
+							location.reload(true);
+						}
+					}
+				})
+				
+				
+		
+			
+			});
+			updateLeaderboard(); // Initial load
+		});
+		</script>
+
+
+{% endblock %}
+

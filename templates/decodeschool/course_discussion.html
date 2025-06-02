@@ -1,0 +1,978 @@
+{% extends 'decodeschool/base.html' %}
+{% load custom_tags %}
+{% load crispy_forms_tags %}
+{% block course %}
+active
+{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'course_list' %}">Courses</a></li> <!-- Update this URL based on your route for courses -->
+        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'course_detail' course_id %}">{{ course.course_title }}</a></li>
+        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Discussion Details</li>
+    </ol>
+    <h6 class="font-weight-bolder mb-0">{{ discussion.discussion_name }} Details</h6>
+{% endblock %}
+
+{% block tool %}
+<a class="btn btn-secondary" href="{% url 'course_detail' course_id %}?tab=discussion">Back to Course</a>
+
+{% endblock %}
+
+
+{% block content %}
+
+<form id="discussionForm" method="POST" action="{% url 'course_discussion' course_id=course_id discussion_id=discussion_id %}">
+
+    {% csrf_token %}
+
+    <input type="hidden" id="course_id" value="{{ course_id }}">
+
+    <!-- Input Row -->
+    <div class="row mb-3">
+        <div class="col">
+            <label>User</label>
+            <select id="user" name="user" class="form-control" onchange="sendUserId()">
+                <option value="">Select</option>
+                {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col">
+            <label>Problem</label>
+            <select id="problem" class="form-control">
+                <option value="">Select</option>
+                <!-- Problems will be dynamically loaded based on selected user -->
+            </select>
+        </div>
+
+        <div class="col">
+            <label>Integrity</label>
+            <select id="integrity" class="form-control">
+                <option value="">Select</option>
+                {% for key, value in integrity_choices %}
+                    <option value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col">
+            <label>Communication</label>
+            <select id="communication" class="form-control">
+                <option value="">Select</option>
+                {% for key, value in communication_choices %}
+                    <option value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Comments Row -->
+    <div class="row mb-3">
+        <div class="col">
+            <label>Comments</label>
+            <textarea id="comments" class="form-control" rows="4"></textarea>
+        </div>
+        <div class="col">
+            <input type="hidden" id="discussion_id" value="">
+            <button type="button" class="btn btn-primary mt-4" id="addUpdateBtn" onclick="handleSubmission()">Add</button>
+            <button type="button" class="btn btn-secondary mt-4 ms-2" id="cancelBtn" onclick="resetForm()" style="display: none;">Cancel</button>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="courseTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="assignments-tab" data-bs-toggle="tab" href="#assignments" role="tab" aria-controls="assignments" aria-selected="true">Completed</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="discussion-tab" data-bs-toggle="tab" href="#discussion" role="tab" aria-controls="discussion" aria-selected="false">Not Completed</a>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="courseTabContent">
+        <!-- Assignments Tab -->
+        <div class="tab-pane fade show active" id="assignments" role="tabpanel" aria-labelledby="assignments-tab">
+            <div class="accordion" id="accordionExample">
+                <h2 class="accordion-header border-bottom" id="heading{{ assignment.id }}">
+                </h2>
+                <!-- Table for Discussions -->
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Problem</th>
+                                <th>Integrity</th>
+                                <th>Communication</th>
+                                <th>Comments</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entryTable">
+                            <!-- Dynamic rows will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+    
+                <button type="button" class="btn btn-success mt-2" id="submitBtn">Submit</button>
+
+
+
+
+            
+                <!-- Modal -->
+                <div class="modal fade" id="userCountsModal" tabindex="-1" aria-labelledby="userCountsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="userCountsModalLabel">User Counts</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center"> <!-- Center align text -->
+                          <p>Total Users: <span id="totalUsersCount">0</span></p>
+                          <p>Completed Users: <span id="completedUsersCount">0</span></p>
+                          <p>Not Completed Users: <span id="notCompletedUsersCount">0</span></p>
+                        </div>
+                        <!-- Center-align buttons -->
+                        <div class="modal-footer d-flex justify-content-center"> 
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn btn-primary" id="confirmSubmitBtn">Yes</button>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                
+  
+
+            </div>
+        </div>
+    
+        <!-- Discussion Tab -->
+        <!-- not Completed disscussion -->
+
+<div class="tab-pane fade" id="discussion" role="tabpanel" aria-labelledby="discussion-tab">
+    <div class="table-responsive mt-3">
+        <table class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th>Registration Number</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Solved Problems</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="pendingStudentsTable">
+                {% for user in users %}
+                    {% with user_profile=user.profile_set.first %}
+                    <tr data-user-id="{{ user.id }}" 
+                        data-username="{{ user.username }}" 
+                        data-fullname="{{ user.get_full_name }}"
+                        data-department="{{ user_profile.department.name|default:'N/A' }}"
+                        data-solved-count="0">
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.get_full_name }}</td>
+                        <td>
+                            {% if user_profile and user_profile.department %}
+                                {{ user_profile.department.short_name }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="solved-count">Loading...</td>
+                        <td class="action-cell">
+                            <!-- Button will be dynamically added/removed via JavaScript -->
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+</form>
+
+    </div>
+</form>
+
+<script>
+
+  // Function to get user counts
+function getUserCounts() {
+    // Get total users from the course (all users in pendingStudentsTable, even if hidden)
+    const totalUsers = document.querySelectorAll("#pendingStudentsTable tr[data-user-id]").length;
+    
+    // Get completed users from the completed table
+    const completedUsers = document.querySelectorAll("#entryTable tr").length;
+    
+    // Get not completed users from visible rows in pendingStudentsTable
+    const notCompletedUsers = document.querySelectorAll("#pendingStudentsTable tr[data-user-id]:not([style*='display: none'])").length;
+    
+    return {
+        total: totalUsers,
+        completed: completedUsers,
+        notCompleted: notCompletedUsers
+    };
+}
+
+// Update the submit button click handler
+document.getElementById("submitBtn").addEventListener("click", function(event) {
+    event.preventDefault();
+    
+    // Get counts using the new function
+    const counts = getUserCounts();
+    
+    // Update the modal with the calculated counts
+    document.getElementById("totalUsersCount").innerText = counts.total;
+    document.getElementById("completedUsersCount").innerText = counts.completed;
+    document.getElementById("notCompletedUsersCount").innerText = counts.notCompleted;
+    
+    // Show the modal
+    var userCountsModal = new bootstrap.Modal(document.getElementById('userCountsModal'));
+    userCountsModal.show();
+});
+
+// Update counts whenever the tables change
+function updateCounts() {
+    const counts = getUserCounts();
+    
+    // Update any UI elements that show the counts
+    if (document.getElementById("totalUsersCount")) {
+        document.getElementById("totalUsersCount").innerText = counts.total;
+    }
+    if (document.getElementById("completedUsersCount")) {
+        document.getElementById("completedUsersCount").innerText = counts.completed;
+    }
+    if (document.getElementById("notCompletedUsersCount")) {
+        document.getElementById("notCompletedUsersCount").innerText = counts.notCompleted;
+    }
+}
+
+// Add listeners to update counts when tables change
+const observer = new MutationObserver(updateCounts);
+
+// Observe both tables for changes
+const completedTable = document.getElementById("entryTable");
+const pendingTable = document.getElementById("pendingStudentsTable");
+
+if (completedTable) {
+    observer.observe(completedTable, { childList: true, subtree: true });
+}
+if (pendingTable) {
+    observer.observe(pendingTable, { childList: true, subtree: true });
+}
+
+// Initial count update
+document.addEventListener('DOMContentLoaded', updateCounts);
+    
+    
+
+    let editingRow = null;
+    let addedUsers = []; 
+    let solvedProblemsData = {}; 
+    let discussedProblemsData = {}; 
+    
+    
+    function handleSubmission() {
+        let user = document.getElementById("user");
+        let problem = document.getElementById("problem");
+        let integrity = document.getElementById("integrity");
+        let communication = document.getElementById("communication");
+        let comments = document.getElementById("comments");
+    
+        if (user.value && problem.value && integrity.value && communication.value) {
+            if (addedUsers.includes(user.value) && !editingRow) {
+                alert("This user has already been added to the Completed list.");
+                return; 
+            }
+    
+            if (editingRow) {
+               
+                updateTableRow(
+                    editingRow,
+                    user.value,
+                    user.options[user.selectedIndex].text,
+                    problem.value,
+                    problem.options[problem.selectedIndex].text,
+                    integrity.value,
+                    integrity.options[integrity.selectedIndex].text,
+                    communication.value,
+                    communication.options[communication.selectedIndex].text,
+                    comments.value
+                );
+                addedUsers.push(user.value); // Add the user back to the list if they were edited
+                editingRow = null; // Reset the editing state
+            } else {
+                // Add new row
+                addTableRow(
+                    user.value,
+                    user.options[user.selectedIndex].text,
+                    problem.value,
+                    problem.options[problem.selectedIndex].text,
+                    integrity.value,
+                    integrity.options[integrity.selectedIndex].text,
+                    communication.value,
+                    communication.options[communication.selectedIndex].text,
+                    comments.value
+                );
+                addedUsers.push(user.value); // Add user to the added users list
+                removeUserFromPending(user.value); // Remove from "Not Completed"
+            }
+            resetForm(); // Reset the form after submission
+        } else {
+            alert("Please fill all required fields.");
+        }
+    }
+
+    // Function to add new row
+    function addTableRow(userId, userName, problemId, problemTitle, integrityValue, integrityText, 
+                        communicationValue, communicationText, commentsText) {
+        let table = document.getElementById("entryTable");
+        let row = table.insertRow();
+        
+        row.innerHTML = `
+            <td>
+                <input type="hidden" name="users[]" value="${userId}">
+                ${userName}
+            </td>
+            <td>
+                <input type="hidden" name="problems[]" value="${problemId}">
+                ${problemTitle}
+            </td>
+            <td>
+                <input type="hidden" name="integrity_scores[]" value="${integrityValue}">
+                ${integrityText}
+            </td>
+            <td>
+                <input type="hidden" name="communication_scores[]" value="${communicationValue}">
+                ${communicationText}
+            </td>
+            <td>
+                <input type="hidden" name="comments[]" value="${commentsText}">
+                ${commentsText}
+            </td>
+            <td>
+                <button type="button" class="btn btn-warning btn-sm" onclick="editEntry(this)">Edit</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeEntry(this)">Remove</button>
+            </td>
+        `;
+    }
+    
+    // Function to update existing row
+    function updateTableRow(row, userId, userName, problemId, problemTitle, integrityValue, integrityText, 
+                            communicationValue, communicationText, commentsText) {
+        row.innerHTML = `
+            <td>
+                <input type="hidden" name="users[]" value="${userId}">
+                ${userName}
+            </td>
+            <td>
+                <input type="hidden" name="problems[]" value="${problemId}">
+                ${problemTitle}
+            </td>
+            <td>
+                <input type="hidden" name="integrity_scores[]" value="${integrityValue}">
+                ${integrityText}
+            </td>
+            <td>
+                <input type="hidden" name="communication_scores[]" value="${communicationValue}">
+                ${communicationText}
+            </td>
+            <td>
+                <input type="hidden" name="comments[]" value="${commentsText}">
+                ${commentsText}
+            </td>
+            <td>
+                <button type="button" class="btn btn-warning btn-sm" onclick="editEntry(this)">Edit</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeEntry(this)">Remove</button>
+            </td>
+        `;
+    }
+
+    // Function to edit entry
+function editEntry(button) {
+    let row = button.closest('tr');
+    editingRow = row;
+    
+    let userId = row.querySelector('input[name="users[]"]').value;
+    let problem = row.querySelector('input[name="problems[]"]').value;
+    let integrity = row.querySelector('input[name="integrity_scores[]"]').value;
+    let communication = row.querySelector('input[name="communication_scores[]"]').value;
+    let comments = row.querySelector('input[name="comments[]"]').value;
+
+    // Remove user from addedUsers temporarily while editing
+    addedUsers = addedUsers.filter(id => id !== userId);
+    
+    // Update the dropdown first
+    populateUserDropdown();
+    
+    // Set form values
+    document.getElementById("user").value = userId;
+    
+    // Populate problems dropdown for this user
+    sendUserId();
+    
+    // Set the rest of the form values after a small delay to ensure problem dropdown is populated
+    setTimeout(() => {
+        document.getElementById("problem").value = problem;
+        document.getElementById("integrity").value = integrity;
+        document.getElementById("communication").value = communication;
+        document.getElementById("comments").value = comments;
+    }, 300);
+    
+    // Update button text and show cancel button
+    document.getElementById("addUpdateBtn").innerText = "Update";
+    document.getElementById("cancelBtn").style.display = "inline-block";
+}
+    
+    // Function to remove entry
+    function removeEntry(button) {
+        if (confirm("Are you sure you want to add to not completed?")) {
+            let row = button.closest('tr');
+            let userId = row.querySelector('input[name="users[]"]').value;
+            
+            addUserToPending(userId);
+            row.remove();
+            
+            if (editingRow === row) {
+                resetForm();
+            }
+            
+            populateUserDropdown(); // Update dropdown after removal
+        }
+    }
+    
+   // Function to reset form
+function resetForm() {
+    // If we were editing, restore the user to addedUsers
+    if (editingRow) {
+        const userId = editingRow.querySelector('input[name="users[]"]').value;
+        if (!addedUsers.includes(userId)) {
+            addedUsers.push(userId);
+        }
+    }
+
+    // Clear all form fields
+    document.getElementById("user").value = "";
+    document.getElementById("problem").value = "";
+    document.getElementById("integrity").value = "";
+    document.getElementById("communication").value = "";
+    document.getElementById("comments").value = "";
+    document.getElementById("discussion_id").value = "";
+    
+    // Reset buttons
+    document.getElementById("addUpdateBtn").innerText = "Add";
+    document.getElementById("cancelBtn").style.display = "none";
+    
+    // Clear editing state
+    editingRow = null;
+    
+    // Repopulate dropdown
+    populateUserDropdown();
+    
+    // Reset problem dropdown
+    document.getElementById("problem").innerHTML = "<option value=''>Select</option>";
+}
+
+    // Function to send the selected user ID and update the problem dropdown
+    function sendUserId() {
+        let userId = document.getElementById("user").value;
+        let courseId = document.getElementById("course_id").value;
+    
+        if (userId) {
+            fetch(`/get_user_solved_problems/${userId}/?course_id=${courseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    let problemDropdown = document.getElementById("problem");
+                    problemDropdown.innerHTML = "<option value=''>Select</option>";
+    
+                    if (data.problems && data.problems.length > 0) {
+                        data.problems.forEach(problem => {
+                            let option = document.createElement("option");
+                            option.value = problem.id;
+                            option.textContent = problem.title;
+                            problemDropdown.appendChild(option);
+                        });
+                    } else {
+                        problemDropdown.innerHTML = "<option value=''>No solved problems found</option>";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    let problemDropdown = document.getElementById("problem");
+                    problemDropdown.innerHTML = "<option value=''>Error loading problems</option>";
+                });
+        } else {
+            document.getElementById("problem").innerHTML = "<option value=''>Select</option>";
+        }
+    }
+
+    // Function to remove user from "Not Completed" table
+    function removeUserFromPending(userId) {
+        let pendingTable = document.getElementById("pendingStudentsTable");
+        let rowToRemove = Array.from(pendingTable.rows).find(row => row.getAttribute("data-user-id") === userId);
+        if (rowToRemove) {
+            rowToRemove.remove();
+        }
+    }
+
+    // Update addUserToPending function
+function addUserToPending(userId) {
+    let pendingTable = document.getElementById("pendingStudentsTable");
+    let userRow = Array.from(pendingTable.rows).find(row => row.getAttribute("data-user-id") === userId);
+    
+    if (userRow) {
+        // Remove user from addedUsers array
+        addedUsers = addedUsers.filter(id => id !== userId);
+        
+        // Only show the row if the user has pending problems
+        let solvedProblems = solvedProblemsData[userId] || [];
+        let discussedProblems = discussedProblemsData[userId] || [];
+        let pendingProblems = solvedProblems.filter(problem => !discussedProblems.includes(problem.id));
+        
+        if (pendingProblems.length > 0) {
+            userRow.style.display = "table-row";
+        }
+        
+        populateUserDropdown();
+    }
+}
+
+// Add this to your DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize addedUsers array from existing completed entries
+    document.querySelectorAll("#entryTable tr").forEach(row => {
+        let userId = row.querySelector('input[name="users[]"]')?.value;
+        if (userId) {
+            addedUsers.push(userId);
+        }
+    });
+    
+    // Update solved problem counts
+    updateSolvedProblemCounts();
+    
+    // Load initial data and filter pending students
+    loadInitialData().then(() => {
+        filterPendingStudents();
+    });
+    
+    // Add mutation observer to update counts when rows are added/removed
+    const observer = new MutationObserver(() => {
+        filterPendingStudents();
+    });
+    
+    const entryTable = document.getElementById("entryTable");
+    if (entryTable) {
+        observer.observe(entryTable, { childList: true });
+    }
+});
+
+// Helper function to load initial data
+async function loadInitialData() {
+    const courseId = document.getElementById("course_id").value;
+    const promises = [];
+    
+    document.querySelectorAll("#pendingStudentsTable tr").forEach(row => {
+        const userId = row.getAttribute("data-user-id");
+        if (userId) {
+            promises.push(
+                fetch(`/get_user_solved_problems/${userId}/?course_id=${courseId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        solvedProblemsData[userId] = data.problems || [];
+                    }),
+                fetch(`/get_user_discussed_problems/${userId}/?course_id=${courseId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        discussedProblemsData[userId] = data.problems.map(p => p.id) || [];
+                    })
+            );
+        }
+    });
+    
+    return Promise.all(promises);
+}
+    // Filter pending students (those with pending problems)
+    function filterPendingStudents() {
+        document.querySelectorAll("#pendingStudentsTable tr").forEach(row => {
+            let userId = row.getAttribute("data-user-id");
+            
+            let solvedProblems = solvedProblemsData[userId] || [];
+            let discussedProblems = discussedProblemsData[userId] || [];
+            let pendingProblems = solvedProblems.filter(problem => !discussedProblems.includes(problem.id));
+
+            // Show row only if the user has pending problems
+            row.style.display = pendingProblems.length > 0 ? "table-row" : "none";
+        });
+    }
+
+    // Initialize discussion
+    function initializeDiscussion(userId, userName) {
+        document.getElementById("user").value = userId;
+
+        let problemDropdown = document.getElementById("problem");
+        problemDropdown.innerHTML = "<option value=''>Select</option>";
+
+        let solvedProblems = solvedProblemsData[userId] || [];
+        let discussedProblems = discussedProblemsData[userId] || [];
+
+        solvedProblems.forEach(problem => {
+            if (!discussedProblems.includes(problem.id)) {
+                let option = document.createElement("option");
+                option.value = problem.id;
+                option.textContent = problem.title;
+                problemDropdown.appendChild(option);
+            }
+        });
+
+        document.getElementById("addUpdateBtn").innerText = "Add ";
+        document.getElementById("cancelBtn").style.display = "inline-block";
+        window.scrollTo(0, 0);
+    }
+
+    
+</script>
+
+
+<script>
+    document.getElementById("confirmSubmitBtn").addEventListener("click", function() {
+        let formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        document.querySelectorAll("#entryTable tr").forEach(row => {
+            formData.append('users[]', row.querySelector('input[name="users[]"]').value);
+            formData.append('problems[]', row.querySelector('input[name="problems[]"]').value);
+            formData.append('integrity_scores[]', row.querySelector('input[name="integrity_scores[]"]').value);
+            formData.append('communication_scores[]', row.querySelector('input[name="communication_scores[]"]').value);
+            formData.append('comments[]', row.querySelector('input[name="comments[]"]').value);
+        });
+
+        fetch("{% url 'course_discussion' course_id=course_id discussion_id=discussion_id %}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Data successfully saved!");
+                window.location.href = "{% url 'discussion_results' course_id=course_id discussion_id=discussion_id %}";
+            } else {
+                alert("Error saving data: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+
+<!-- drop down -->
+// Function to populate user dropdown
+function populateUserDropdown() {
+    const userDropdown = document.getElementById("user");
+    userDropdown.innerHTML = "<option value=''>Select</option>";
+    
+    // Get all visible rows from the pending students table (not completed users)
+    const pendingRows = document.querySelectorAll("#pendingStudentsTable tr:not([style*='display: none'])");
+    
+    // Keep track of added options to prevent duplicates
+    const addedOptions = new Set();
+
+    // First, add the user being edited if any
+    if (editingRow) {
+        const userId = editingRow.querySelector('input[name="users[]"]').value;
+        const userName = editingRow.cells[0].textContent.trim();
+        
+        const option = document.createElement("option");
+        option.value = userId;
+        option.textContent = userName;
+        userDropdown.appendChild(option);
+        addedOptions.add(userId);
+    }
+
+    // Then add all users from the "Not Completed" tab
+    pendingRows.forEach(row => {
+        const userId = row.getAttribute("data-user-id");
+        const username = row.getAttribute("data-username");
+        
+        // Only add if not already in dropdown and row is visible
+        if (!addedOptions.has(userId) && row.style.display !== 'none') {
+            const option = document.createElement("option");
+            option.value = userId;
+            option.textContent = username;
+            userDropdown.appendChild(option);
+            addedOptions.add(userId);
+        }
+    });
+}
+// Function to add user back to "Not Completed" table
+function addUserToPending(userId) {
+    // Find the row in the pending table
+    let pendingTable = document.getElementById("pendingStudentsTable");
+    let userRow = Array.from(pendingTable.rows).find(row => row.getAttribute("data-user-id") === userId);
+    
+    if (userRow) {
+        // Make the row visible
+        userRow.style.display = "table-row";
+        
+        // Remove user from addedUsers array
+        addedUsers = addedUsers.filter(id => id !== userId);
+        
+        // Update the dropdown to include this user
+        populateUserDropdown();
+    }
+}
+
+// Function to remove entry and add back to not completed
+function removeEntry(button) {
+    if (confirm("Are you sure you want to add to not completed?")) {
+        let row = button.closest('tr');
+        let userId = row.querySelector('input[name="users[]"]').value;
+        
+        // Remove from addedUsers array
+        addedUsers = addedUsers.filter(id => id !== userId);
+        
+        // Show the row in pending table
+        let pendingRow = document.querySelector(`#pendingStudentsTable tr[data-user-id="${userId}"]`);
+        if (pendingRow) {
+            pendingRow.style.display = "table-row";
+        }
+        
+        // Remove the row from completed table
+        row.remove();
+        
+        // Reset form if we were editing this row
+        if (editingRow === row) {
+            resetForm();
+        } else {
+            // Just update the dropdown if we weren't editing
+            populateUserDropdown();
+        }
+    }
+}
+
+// Update filterPendingStudents function to manage visibility
+function filterPendingStudents() {
+    document.querySelectorAll("#pendingStudentsTable tr").forEach(row => {
+        let userId = row.getAttribute("data-user-id");
+        
+        let solvedProblems = solvedProblemsData[userId] || [];
+        let discussedProblems = discussedProblemsData[userId] || [];
+        let pendingProblems = solvedProblems.filter(problem => !discussedProblems.includes(problem.id));
+
+        // Show row only if user has pending problems and is not in completed list
+        const shouldShow = pendingProblems.length > 0 && !addedUsers.includes(userId);
+        row.style.display = shouldShow ? "table-row" : "none";
+    });
+    
+    // Update the user dropdown after filtering
+    populateUserDropdown();
+}
+
+// Function to remove user from pending when added to completed
+function removeUserFromPending(userId) {
+    let pendingTable = document.getElementById("pendingStudentsTable");
+    let rowToHide = Array.from(pendingTable.rows).find(row => row.getAttribute("data-user-id") === userId);
+    if (rowToHide) {
+        rowToHide.style.display = "none";
+        if (!addedUsers.includes(userId)) {
+            addedUsers.push(userId);
+        }
+    }
+    populateUserDropdown();
+}
+
+
+// Initialize the user dropdown when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize addedUsers array from existing completed entries
+    document.querySelectorAll("#entryTable tr").forEach(row => {
+        let userId = row.querySelector('input[name="users[]"]')?.value;
+        if (userId) {
+            addedUsers.push(userId);
+        }
+    });
+    
+    // Initial population of the dropdown
+    populateUserDropdown();
+    
+    // Load solved problems for all users
+    document.querySelectorAll("#pendingStudentsTable tr").forEach(row => {
+        let userId = row.getAttribute("data-user-id");
+
+        fetch(`/get_user_solved_problems/${userId}/?course_id=${document.getElementById("course_id").value}`)
+            .then(response => response.json())
+            .then(data => {
+                solvedProblemsData[userId] = data.problems || [];
+                filterPendingStudents();
+            });
+
+        fetch(`/get_user_discussed_problems/${userId}/?course_id=${document.getElementById("course_id").value}`)
+            .then(response => response.json())
+            .then(data => {
+                discussedProblemsData[userId] = data.problems.map(p => p.id) || [];
+                filterPendingStudents();
+            });
+    });
+});
+
+// Update the handleSubmission function
+function handleSubmission() {
+    let user = document.getElementById("user");
+    let problem = document.getElementById("problem");
+    let integrity = document.getElementById("integrity");
+    let communication = document.getElementById("communication");
+    let comments = document.getElementById("comments");
+
+    if (user.value && problem.value && integrity.value && communication.value) {
+        if (addedUsers.includes(user.value) && !editingRow) {
+            alert("This user has already been added to the Completed list.");
+            return;
+        }
+
+        if (editingRow) {
+            updateTableRow(
+                editingRow,
+                user.value,
+                user.options[user.selectedIndex].text,
+                problem.value,
+                problem.options[problem.selectedIndex].text,
+                integrity.value,
+                integrity.options[integrity.selectedIndex].text,
+                communication.value,
+                communication.options[communication.selectedIndex].text,
+                comments.value
+            );
+            
+            // Add user back to addedUsers if they weren't there
+            if (!addedUsers.includes(user.value)) {
+                addedUsers.push(user.value);
+            }
+            
+            editingRow = null;
+        } else {
+            addTableRow(
+                user.value,
+                user.options[user.selectedIndex].text,
+                problem.value,
+                problem.options[problem.selectedIndex].text,
+                integrity.value,
+                integrity.options[integrity.selectedIndex].text,
+                communication.value,
+                communication.options[communication.selectedIndex].text,
+                comments.value
+            );
+            addedUsers.push(user.value);
+            removeUserFromPending(user.value);
+        }
+        
+        resetForm();
+    } else {
+        alert("Please fill all required fields.");
+    }
+}
+
+
+
+<!-- solved problem count -->
+
+// Function to update solved problem counts and manage discuss buttons
+async function updateSolvedProblemCounts() {
+    const courseId = document.getElementById("course_id").value;
+    const rows = document.querySelectorAll("#pendingStudentsTable tr[data-user-id]");
+    
+    for (const row of rows) {
+        const userId = row.getAttribute("data-user-id");
+        try {
+            const response = await fetch(`/get_user_solved_problems/${userId}/?course_id=${courseId}`);
+            const data = await response.json();
+            
+            const solvedCount = data.solved_count;
+            row.setAttribute('data-solved-count', solvedCount);
+            
+            // Make sure the row is visible
+            row.style.display = 'table-row';
+            
+            // Update solved count cell
+            const countCell = row.querySelector('.solved-count');
+            countCell.textContent = solvedCount;
+            
+            // Update action cell based on solved count
+            const actionCell = row.querySelector('.action-cell');
+            if (solvedCount > 0 && !addedUsers.includes(userId)) {
+                actionCell.innerHTML = `
+                    <button type="button" class="btn btn-primary btn-sm" 
+                            onclick="initializeDiscussion('${userId}', '${row.getAttribute('data-username')}')">
+                        Discuss
+                    </button>`;
+            } else if (solvedCount === 0) {
+                actionCell.innerHTML = '<span class="text-muted">No solved problems</span>';
+            } else if (addedUsers.includes(userId)) {
+                row.style.display = 'none'; // Hide if already in completed list
+            }
+        } catch (error) {
+            console.error('Error fetching solved problems:', error);
+            row.querySelector('.solved-count').textContent = 'Error';
+        }
+    }
+    
+    // Update the user dropdown after counts are updated
+    populateUserDropdown();
+}
+
+// Update filterPendingStudents function
+function filterPendingStudents() {
+    document.querySelectorAll("#pendingStudentsTable tr").forEach(row => {
+        let userId = row.getAttribute("data-user-id");
+        const solvedCount = parseInt(row.getAttribute("data-solved-count")) || 0;
+        
+        // Show all rows except those already in completed list
+        const shouldShow = !addedUsers.includes(userId);
+        row.style.display = shouldShow ? "table-row" : "none";
+    });
+    
+    // Update the user dropdown after filtering
+    populateUserDropdown();
+}
+
+// Update populateUserDropdown function
+function populateUserDropdown() {
+    const userDropdown = document.getElementById("user");
+    userDropdown.innerHTML = "<option value=''>Select</option>";
+    const addedOptions = new Set();
+
+    // First, add the user being edited if any
+    if (editingRow) {
+        const userId = editingRow.querySelector('input[name="users[]"]').value;
+        const userName = editingRow.cells[0].textContent.trim();
+        
+        const option = document.createElement("option");
+        option.value = userId;
+        option.textContent = userName;
+        userDropdown.appendChild(option);
+        addedOptions.add(userId);
+    }
+
+    // Then add users from pending table with solved problems > 0
+    const pendingRows = document.querySelectorAll("#pendingStudentsTable tr:not([style*='display: none'])");
+    pendingRows.forEach(row => {
+        const userId = row.getAttribute("data-user-id");
+        const username = row.getAttribute("data-username");
+        const solvedCount = parseInt(row.getAttribute("data-solved-count")) || 0;
+        
+        if (!addedOptions.has(userId) && solvedCount > 0 && !addedUsers.includes(userId)) {
+            const option = document.createElement("option");
+            option.value = userId;
+            option.textContent = username;
+            userDropdown.appendChild(option);
+            addedOptions.add(userId);
+        }
+    });
+}
+
+</script>
+
+{% endblock %}

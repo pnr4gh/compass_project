@@ -1,0 +1,162 @@
+
+{% extends "decodeschool/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% load custom_tags %}
+{% block breadcrumb %}
+{% block Accolades %}
+active
+{% endblock %}
+<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Accolades</li>
+</ol>
+<h6 class="font-weight-bolder mb-0">Accolades</h6>
+{% endblock %}
+{% block tool %}
+<a href="{% url 'create_accolade' %}" class="btn btn-primary">+ Add Accolade</a>
+
+{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <form method="GET" action="{% url 'accolade_list' %}" class="d-flex align-items-center search-form">
+        <div class="input-group" style="max-width: 3500px;">
+            <span class="input-group-text bg-white border-end-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </span>
+            <input type="text" name="username" class="form-control border-start-0 search-input" placeholder="Search by username" value="{{ username|default:'' }}" aria-label="Search by username">
+        </div>
+        <button type="submit" class="btn btn-primary ms-2 search-btn">Search</button>
+        {% if username %}
+        <a href="{% url 'accolade_list' %}" class="btn btn-outline-secondary ms-2 clear-btn">Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- Display "User not found" message -->
+    {% if user_not_found %}
+        <div class="alert alert-warning mt-3" role="alert">
+            {{ username }} not found.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Optional: Display found users -->
+
+{% for accolade in accolades %}
+{% if accolade %}
+<div class="card mb-3" style="border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+    <div class="card-header d-flex align-items-center" style="background-color:rgb(224, 224, 224); border-bottom: 1px solid #ddd;">
+        <div class="d-flex align-items-center">
+            <img src="{% static 'media/user_profile.jpeg' %}" alt="Default Profile Picture" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #ddd;">
+            <div>
+                <strong style="font-size: 1rem; color: darkorange;">{{ accolade.posted_by.username }}</strong>
+            </div>
+        </div>
+        <hr>
+    </div>
+    <div class="card-body" style="padding: 1rem;">
+        
+            <div class="mb-2">
+                <strong style="color: #555;">Organization Name:</strong>
+                <span>{{ accolade.organization.name }}</span>
+            </div>
+        
+            <div class="mb-2">
+                <strong style="color: #555;">Outcome Title:</strong>
+                <span>{{ accolade.outcome.title }}</span>
+            </div>
+        
+            <div class="mb-2">
+                <strong style="color: #555;">Outcome Score:</strong>
+                <span>{{ accolade.outcome.score }}</span>
+            </div>
+        
+            <div class="mb-2">
+                <strong style="color: #555;">Scope:</strong>
+                <span>{{ accolade.scope.scope }}</span>
+            </div>
+        
+            <div class="mb-2">
+                <strong style="color: #555;">Scope Score:</strong>
+                <span>{{ accolade.scope.score }}</span>
+            </div>
+        
+            <div class="mb-2">
+                <strong style="color: #555;">Skills:</strong>
+                <span>{{ accolade.skills }}</span>
+            </div>
+        
+        
+            
+             
+        <p style="font-size: 1rem; color: #555;">{{ accolade.content|safe }}</p>
+        
+        <span style="display: inline-block;">{{ accolade.post_datetime }}</span></p>
+        
+
+        
+        <button class="btn btn-sm btn-outline-primary like-btn" data-id="{{ accolade.id }}" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+            👍 {{ accolade.likes.count }}
+        </button>
+    </div>
+</div>
+{% else %}
+<p>No accolades available.</p>
+{% endif %}
+{% endfor %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const accoladeId = this.dataset.id;
+            const likeBtn = this;
+
+            fetch(`/accolades/like/${accoladeId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                likeBtn.innerText = `👍 ${data.likes_count}`;
+                likeBtn.classList.toggle('btn-primary', data.liked);
+                likeBtn.classList.toggle('btn-outline-primary', !data.liked);
+            })
+            .catch(error => {
+                console.error('Error during like:', error);
+            });
+        });
+    });
+
+    
+</script>
+
+
+    
+
+{% endblock %}

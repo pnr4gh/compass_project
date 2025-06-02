@@ -1,0 +1,651 @@
+{% extends "decodeschool/base.html" %}
+{% load widget_tweaks %}
+{% block breadcrumb %}
+<ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'aura_page' %}">Aura</a></li>
+    <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Add Question</li>
+</ol>
+<h2 class="font-weight-bolder mb-0">Add Multiple Questions</h2>
+{% endblock %}
+{% block aura %}
+active
+{%endblock%}
+
+{% block tool %}
+<a href="{% url 'aura_page' %}" class="btn btn-secondary">Back to Aura</a>
+
+{% endblock %}
+
+{% block content %}
+
+
+
+<div class="container mt-5">
+    
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+        <i class="fas fa-plus"> Skill</i>
+    </button>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTagModal">
+        <i class="fas fa-plus"> Tag</i>
+    </button>
+    <!-- Add Skill Modal -->
+    <div class="modal fade" id="addSkillModal" tabindex="-1" aria-labelledby="addSkillModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSkillModalLabel">Add New Skill</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="newSkillName" class="form-label">Skill Name:</label>
+                        <input type="text" class="form-control" id="newSkillName" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveSkillBtn">Save Skill</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Tag Modal -->
+    <div class="modal fade" id="addTagModal" tabindex="-1" aria-labelledby="addTagModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTagModalLabel">Add New Tag</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="newTagName" class="form-label">Tag Name:</label>
+                        <input type="text" class="form-control" id="newTagName" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTagBtn">Save Tag</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" id="create-questions-form">
+        {% csrf_token %}
+        
+        <div id="questions-container">
+            {{ question_formset.management_form }}
+            
+            {% for question_form in question_formset %}
+                <div class="card mb-4 question-form shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h3 class="h5 mb-0">Question {{ forloop.counter }}</h3>
+                        <button type="button" class="btn btn-outline-danger btn-sm cancel-question">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Hidden fields -->
+                        {% for hidden in question_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Question Name:</label>
+                            {{ question_form.name|add_class:"form-control" }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Description:</label>
+                            {{ question_form.description|add_class:"form-control" }}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Skill:</label>
+                                    <div class="input-group">
+                                        {{ question_form.skill|add_class:"form-select" }}
+                                        
+                                        <button type="button" class="" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Tags:</label>
+                                    <div class="input-group">
+                                        {{ question_form.tags|add_class:"form-control" }}
+                                        <button type="button" class="" data-bs-toggle="modal" data-bs-target="#addTagModal">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">CAMP Category:</label>
+                                    {{ question_form.camp_category|add_class:"form-select" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Answer Description:</label>
+                            {{ question_form.answer_description|add_class:"form-control" }}
+                        </div>
+                        
+                        <div class="form-check form-switch mb-4">
+                            {{ question_form.is_practice|add_class:"form-check-input" }}
+                            <label class="form-check-label" for="{{ question_form.is_practice.id_for_label }}">
+                                Is Practice Question
+                            </label>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h4 class="h6 mb-0">Options</h4>
+                                <span class="badge bg-info">At least one option must be correct</span>
+                            </div>
+                            <div class="card-body options-container">
+                                <!-- Default options will be added here via JavaScript -->
+                            </div>
+                            <div class="card-footer bg-white">
+                                <button type="button" class="btn btn-outline-primary btn-sm add-option">
+                                    <i class="fas fa-plus"></i> Add Option
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="questions-{{ forloop.counter0 }}-option_count" value="2" class="option-counter">
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="row mt-4 mb-5">
+            <div class="col-md-6">
+                <button type="button" id="add-question" class="btn btn-outline-success">
+                    <i class="fas fa-plus-circle"></i> Add New Question
+                </button>
+            </div>
+            <div class="col-md-6 text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save All Questions
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionFormset = document.getElementById('questions-container');
+        const addQuestionBtn = document.getElementById('add-question');
+        const totalFormsInput = document.querySelector('[name="questions-TOTAL_FORMS"]');
+        const form = document.getElementById('create-questions-form');
+        
+        // Function to create a new option row
+        function createOptionRow(questionIndex, optionIndex, isCorrect = false) {
+            const optionRow = document.createElement('div');
+            optionRow.className = 'row mb-2 option-row align-items-center';
+            optionRow.innerHTML = `
+                <div class="col-md-1 text-center">
+                    <span class="badge bg-secondary option-number">${optionIndex + 1}</span>
+                </div>
+                <div class="col-md-7">
+                    <input type="text" name="questions-${questionIndex}-option-${optionIndex}-name" 
+                           class="form-control" placeholder="Option text" required>
+                </div>
+                <div class="col-md-3">
+                    <select name="questions-${questionIndex}-option-${optionIndex}-value" 
+                            class="form-select form-select-sm">
+                        <option value="0" ${!isCorrect ? 'selected' : ''}>Incorrect</option>
+                        <option value="1" ${isCorrect ? 'selected' : ''}>Correct</option>
+                    </select>
+                </div>
+                <div class="col-md-1 text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-option">
+                        <i class="fa-solid fa-trash" style="font-size: 1.0rem;"></i>
+                    </button>
+                </div>
+            `;
+            
+            return optionRow;
+        }
+        
+        // Function to add default options to a question
+        function addDefaultOptions(questionCard) {
+            const nameField = questionCard.querySelector('[name^="questions-"][name$="-name"]');
+            const questionIndex = nameField.name.match(/questions-(\d+)/)[1];
+            const optionsContainer = questionCard.querySelector('.options-container');
+            
+            // Clear any existing options
+            optionsContainer.innerHTML = '';
+            
+            // Add two default options (first one correct, second one incorrect)
+            const option1 = createOptionRow(questionIndex, 0, true);
+            const option2 = createOptionRow(questionIndex, 1, false);
+            
+            optionsContainer.appendChild(option1);
+            optionsContainer.appendChild(option2);
+            
+            // Set option counter to 2
+            const optionCounter = questionCard.querySelector('.option-counter');
+            optionCounter.value = '2';
+            
+            // Add event listeners to remove buttons
+            questionCard.querySelectorAll('.remove-option').forEach(button => {
+                button.addEventListener('click', function() {
+                    const optionRow = button.closest('.option-row');
+                    
+                    // Check if this is the last option
+                    const optionRows = optionRow.parentElement.querySelectorAll('.option-row');
+                    if (optionRows.length <= 1) {
+                        alert("Cannot remove the last option. At least one option is required.");
+                        return;
+                    }
+                    
+                    optionRow.remove();
+                    renumberOptions(optionRow.parentElement);
+                });
+            });
+        }
+        
+        // Function to renumber options after removing one
+        function renumberOptions(optionsContainer) {
+            const optionRows = optionsContainer.querySelectorAll('.option-row');
+            optionRows.forEach((row, index) => {
+                // Update badge number
+                const badge = row.querySelector('.option-number');
+                if (badge) {
+                    badge.textContent = index + 1;
+                }
+            });
+        }
+        
+        // Function to handle adding options
+        function setupAddOptionButton(questionCard) {
+            const addOptionBtn = questionCard.querySelector('.add-option');
+            const optionsContainer = questionCard.querySelector('.options-container');
+            const optionCounter = questionCard.querySelector('.option-counter');
+            
+            addOptionBtn.addEventListener('click', function() {
+                // Get the question index from the name attribute of a field in this question
+                const nameField = questionCard.querySelector('[name^="questions-"][name$="-name"]');
+                const questionIndex = nameField.name.match(/questions-(\d+)/)[1];
+                const optionCount = parseInt(optionCounter.value);
+                
+                console.log(`Adding option ${optionCount} to question ${questionIndex}`);
+                
+                // Create new option row
+                const optionRow = createOptionRow(questionIndex, optionCount);
+                
+                optionsContainer.appendChild(optionRow);
+                optionCounter.value = optionCount + 1;
+                
+                // Add event listener to the remove button
+                optionRow.querySelector('.remove-option').addEventListener('click', function() {
+                    // Check if this is the last option
+                    const optionRows = optionsContainer.querySelectorAll('.option-row');
+                    if (optionRows.length <= 1) {
+                        alert("Cannot remove the last option. At least one option is required.");
+                        return;
+                    }
+                    
+                    optionRow.remove();
+                    renumberOptions(optionsContainer);
+                });
+            });
+        }
+        
+        // Function to handle the cancel question button
+        function setupCancelQuestionButton(questionCard) {
+            const cancelBtn = questionCard.querySelector('.cancel-question');
+            
+            cancelBtn.addEventListener('click', function() {
+                // Check if this is the only question left
+                if (document.querySelectorAll('.question-form').length <= 1) {
+                    alert("Cannot remove the last question. At least one question is required.");
+                    return;
+                }
+                
+                // Confirm before removing
+                if (confirm("Are you sure you want to remove this question? This action cannot be undone.")) {
+                    // Remove the question card
+                    questionCard.remove();
+                    
+                    // Update the TOTAL_FORMS count
+                    totalFormsInput.value = document.querySelectorAll('.question-form').length;
+                    
+                    // Update all question numbers in the headings
+                    document.querySelectorAll('.question-form').forEach((card, index) => {
+                        card.querySelector('h3').textContent = `Question ${index + 1}`;
+                    });
+                    
+                    // Renumber all form fields if necessary
+                    renumberFormFields();
+                    
+                    // Update question navigation
+                    updateQuestionNavigation();
+                }
+            });
+        }
+        
+        // Function to renumber all form fields after a question is removed
+        function renumberFormFields() {
+            const questionForms = document.querySelectorAll('.question-form');
+            
+            questionForms.forEach((form, newIndex) => {
+                // Find the current index from any named field
+                const nameField = form.querySelector('[name^="questions-"][name$="-name"]');
+                const currentIndex = nameField.name.match(/questions-(\d+)/)[1];
+                
+                // If the current index doesn't match the new index, update all field names
+                if (parseInt(currentIndex) !== newIndex) {
+                    // Update all form fields with this index
+                    form.querySelectorAll(`[name^="questions-${currentIndex}"]`).forEach(input => {
+                        const newName = input.name.replace(new RegExp(`questions-${currentIndex}`), `questions-${newIndex}`);
+                        input.name = newName;
+                        
+                        if (input.id) {
+                            input.id = input.id.replace(new RegExp(`id_questions-${currentIndex}`), `id_questions-${newIndex}`);
+                        }
+                    });
+                    
+                    // Update the option counter
+                    const optionCounter = form.querySelector('.option-counter');
+                    optionCounter.name = `questions-${newIndex}-option_count`;
+                    
+                    // Update options if any exist
+                    form.querySelectorAll('.option-row').forEach(option => {
+                        const inputs = option.querySelectorAll(`[name^="questions-${currentIndex}-option"]`);
+                        inputs.forEach(input => {
+                            const optionPattern = new RegExp(`questions-${currentIndex}-option-([0-9]+)`);
+                            const match = input.name.match(optionPattern);
+                            if (match) {
+                                const optionIndex = match[1];
+                                input.name = input.name.replace(optionPattern, `questions-${newIndex}-option-${optionIndex}`);
+                            }
+                        });
+                    });
+                }
+            });
+            
+            console.log(`Renumbered form fields. Total forms now: ${questionForms.length}`);
+        }
+        
+        // Function to update the question navigation
+        function updateQuestionNavigation() {
+            const navContainer = document.querySelector('.question-nav');
+            if (navContainer) {
+                navContainer.innerHTML = '';
+                
+                document.querySelectorAll('.question-form').forEach((form, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-outline-primary me-2 mb-2';
+                    btn.textContent = index + 1;
+                    btn.type = 'button';
+                    
+                    btn.addEventListener('click', () => {
+                        form.scrollIntoView({ behavior: 'smooth' });
+                    });
+                    
+                    navContainer.appendChild(btn);
+                });
+            }
+        }
+        
+        // Function to validate form before submission
+        function validateQuestionForm() {
+            let isValid = true;
+            const requiredFields = [];
+            
+            // Check each question form
+            document.querySelectorAll('.question-form').forEach((form, index) => {
+                // Validate name field
+                const nameField = form.querySelector('[name$="-name"]');
+                if (!nameField.value.trim()) {
+                    nameField.classList.add('is-invalid');
+                    if (!nameField.nextElementSibling || !nameField.nextElementSibling.classList.contains('invalid-feedback')) {
+                        const feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback';
+                        feedback.textContent = 'Question name is required';
+                        nameField.parentNode.insertBefore(feedback, nameField.nextSibling);
+                    }
+                    requiredFields.push(`Question ${index + 1} name`);
+                    isValid = false;
+                } else {
+                    nameField.classList.remove('is-invalid');
+                    if (nameField.nextElementSibling && nameField.nextElementSibling.classList.contains('invalid-feedback')) {
+                        nameField.nextElementSibling.remove();
+                    }
+                }
+                
+                // Validate options (at least one correct answer)
+                const hasCorrectOption = Array.from(form.querySelectorAll('select[name*="-option-"][name$="-value"]'))
+                    .some(select => select.value === '1');
+                    
+                if (!hasCorrectOption) {
+                    const optionsContainer = form.querySelector('.options-container');
+                    isValid = false;
+                    
+                    // Add error message if not already present
+                    if (!optionsContainer.nextElementSibling || !optionsContainer.nextElementSibling.classList.contains('text-danger')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-danger mt-2 mb-2';
+                        errorMsg.innerHTML = '<small>At least one option must be marked as correct</small>';
+                        optionsContainer.parentNode.insertBefore(errorMsg, optionsContainer.nextSibling);
+                    }
+                    
+                    requiredFields.push(`Question ${index + 1} correct option`);
+                } else {
+                    // Remove error message if exists
+                    if (optionsContainer.nextElementSibling && optionsContainer.nextElementSibling.classList.contains('text-danger')) {
+                        optionsContainer.nextElementSibling.remove();
+                    }
+                }
+            });
+            
+            if (!isValid) {
+                // Show error summary
+                alert(`Please fix the following issues:\n${requiredFields.join('\n')}`);
+            }
+            
+            return isValid;
+        }
+        
+        // Handle adding new skill via AJAX
+        document.getElementById('saveSkillBtn').addEventListener('click', function() {
+            const skillName = document.getElementById('newSkillName').value.trim();
+            
+            if (!skillName) {
+                alert('Please enter a skill name');
+                return;
+            }
+            
+            // Send AJAX request to create new skill
+            fetch('/aura/add-skill/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ skill: skillName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update all skill dropdowns with the new option
+                    const skillDropdowns = document.querySelectorAll('select[name$="-skill"]');
+                    skillDropdowns.forEach(dropdown => {
+                        const option = document.createElement('option');
+                        option.value = data.id;
+                        option.textContent = skillName;
+                        option.selected = true; // Select the new option
+                        dropdown.appendChild(option);
+                    });
+                    
+                    // Close modal and clear input
+                    document.getElementById('newSkillName').value = '';
+                    bootstrap.Modal.getInstance(document.getElementById('addSkillModal')).hide();
+                    
+                    // Show success message
+                    alert(`Skill "${skillName}" added successfully`);
+                } else {
+                    alert(data.error || 'Failed to add skill');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the skill');
+            });
+        });
+        // Handle adding new tag via AJAX
+        document.getElementById('saveTagBtn').addEventListener('click', function() {
+            const tagName = document.getElementById('newTagName').value.trim();
+            
+            if (!tagName) {
+            alert('Please enter a tag name');
+            return;
+            }
+            
+            // Send AJAX request to create new tag
+            fetch('/aura/add-tag/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ tag: tagName })
+            })
+            .then(response => response.json())
+            .then(data => {
+            if (data.success) {
+                // Update all tag dropdowns with the new option
+                const tagDropdowns = document.querySelectorAll('select[name$="-tags"]');
+                tagDropdowns.forEach(dropdown => {
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.textContent = tagName;
+                option.selected = true; // Select the new option
+                dropdown.appendChild(option);
+                });
+                
+                // Close modal and clear input
+                document.getElementById('newTagName').value = '';
+                bootstrap.Modal.getInstance(document.getElementById('addTagModal')).hide();
+                
+                // Show success message
+                alert(`Tag "${tagName}" added successfully`);
+            } else {
+                alert(data.error || 'Failed to add tag');
+            }
+            })
+            .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while adding the tag');
+            });
+        });
+        
+        // Setup initial question forms
+        document.querySelectorAll('.question-form').forEach(questionCard => {
+            setupAddOptionButton(questionCard);
+            setupCancelQuestionButton(questionCard);
+            addDefaultOptions(questionCard);
+        });
+        
+        // Add question functionality
+        addQuestionBtn.addEventListener('click', function() {
+            // Get the current number of questions
+            const currentTotal = parseInt(totalFormsInput.value);
+            const newIndex = currentTotal;
+            
+            console.log(`Adding new question with index ${newIndex}`);
+            
+            // Clone the first question form as a template
+            const firstForm = document.querySelector('.question-form');
+            const newForm = firstForm.cloneNode(true);
+            
+            // Update all form field names to use the new index
+            newForm.querySelectorAll('[name^="questions-0"]').forEach(input => {
+                const newName = input.name.replace(/questions-0/, `questions-${newIndex}`);
+                input.name = newName;
+                input.id = input.id ? input.id.replace(/id_questions-0/, `id_questions-${newIndex}`) : '';
+            });
+            
+            // Clear all input values
+            newForm.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                input.value = '';
+            });
+            
+            // Clear any selected options in dropdowns
+            newForm.querySelectorAll('select').forEach(select => {
+                if (!select.name.includes('-option-')) {
+                    select.selectedIndex = 0;
+                }
+            });
+            
+            // Clear checkboxes
+            newForm.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Update the heading
+            const heading = newForm.querySelector('h3');
+            if (heading) {
+                heading.textContent = `Question ${newIndex + 1}`;
+            }
+            
+            // Clear options container
+            const optionsContainer = newForm.querySelector('.options-container');
+            optionsContainer.innerHTML = '';
+            
+            // Add the new form to the container
+            questionFormset.appendChild(newForm);
+            
+            // Set up the add option functionality for the new question
+            setupAddOptionButton(newForm);
+            // Set up the cancel question functionality for the new question
+            setupCancelQuestionButton(newForm);
+            // Add default options to the new question
+            addDefaultOptions(newForm);
+            
+            // Update the management form count
+            totalFormsInput.value = currentTotal + 1;
+            console.log(`Updated TOTAL_FORMS to ${totalFormsInput.value}`);
+            
+            // Update question navigation
+            updateQuestionNavigation();
+            
+            // Scroll to the new question
+            newForm.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        // Form submission with validation
+        form.addEventListener('submit', function(e) {
+            if (!validateQuestionForm()) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Show loading spinner
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            submitBtn.disabled = true;
+            
+            return true;
+        });
+        
+        // Initialize question navigation
+        updateQuestionNavigation();
+    });
+</script>
+
+{% endblock %}
