@@ -124,7 +124,7 @@ EMAIL_PORT = 587  # Port for TLS, or 465 for SSL
 EMAIL_USE_TLS = True  # Use TLS (secure connection)
 EMAIL_USE_SSL = False  # SSL is not necessary if you're using TLS
 EMAIL_HOST_USER = 'pnr.cse@karpagamtech.ac.in'  # Your Gmail address
-EMAIL_HOST_PASSWORD = 'emkzxwqigpfwlwaf'  # Your Gmail password
+EMAIL_HOST_PASSWORD = ''  # Your Gmail password
 DEFAULT_FROM_EMAIL = 'pnr.cse@karpagamtech.ac.in'  # Default 'from' address
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
